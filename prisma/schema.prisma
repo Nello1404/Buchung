@@ -1,0 +1,229 @@
+// Prisma-Schema FlySpot Valet – Phase 1 (Buchungsstrecke)
+// Alle Geldbeträge werden als ganze Cent-Beträge (Int) gespeichert, um Rundungsfehler
+// bei der Preisberechnung zu vermeiden (z. B. 3900 = 39,00 EUR).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ProductCode {
+  VALET
+  SHUTTLE
+}
+
+enum BookingStatus {
+  ANGEFRAGT
+  BEZAHLT
+  UEBERGEBEN
+  GEPARKT
+  BEREITGESTELLT
+  ABGESCHLOSSEN
+  STORNIERT
+}
+
+enum PaymentStatus {
+  OFFEN
+  BEZAHLT
+  TEILERSTATTET
+  ERSTATTET
+  FEHLGESCHLAGEN
+}
+
+model Customer {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  name      String
+  phone     String?
+  createdAt DateTime  @default(now())
+  bookings  Booking[]
+  vouchers  Voucher[]
+}
+
+model Product {
+  id           String        @id @default(cuid())
+  code         ProductCode   @unique
+  name         String
+  active       Boolean       @default(true)
+  tariffRules  TariffRule[]
+  seasonRates  SeasonRate[]
+  blockedDays  BlockedDay[]
+  capacityDays CapacityDay[]
+  bookings     Booking[]
+}
+
+/// Preis pro Tag, gestaffelt nach Parkdauer (volle Kalendertage), je Produkt.
+model TariffRule {
+  id             String   @id @default(cuid())
+  productId      String
+  product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  minTage        Int
+  /// null = unbegrenzt (letzte, offene Staffel, z. B. "ab 15 Tagen")
+  maxTage        Int?
+  preisProTagCent Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([productId])
+}
+
+/// Saison-Zeitraum mit eigenem (festen) Tagespreis je Produkt – ersetzt für Tage
+/// innerhalb des Zeitraums den regulären Staffelpreis aus TariffRule.
+model SeasonRate {
+  id             String   @id @default(cuid())
+  productId      String
+  product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name           String
+  startDate      DateTime @db.Date
+  endDate        DateTime @db.Date
+  preisProTagCent Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([productId, startDate, endDate])
+}
+
+/// Sperrtage: an diesen Tagen ist das Produkt (oder bei productId=null: global) nicht buchbar.
+model BlockedDay {
+  id        String   @id @default(cuid())
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+  date      DateTime @db.Date
+  reason    String?
+  createdAt DateTime @default(now())
+
+  @@unique([productId, date])
+}
+
+/// Kontingent & Belegung je Produkt und Kalendertag. `belegt` wird atomar innerhalb
+/// der Buchungs-Transaktion hoch-/heruntergezählt (siehe lib/capacity.ts).
+model CapacityDay {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  date      DateTime @db.Date
+  kontingent Int
+  belegt    Int      @default(0)
+
+  @@unique([productId, date])
+  @@index([date])
+}
+
+model ServiceAddon {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  description String?
+  preisCent   Int
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  bookingAddons BookingAddon[]
+}
+
+model BookingAddon {
+  id             String       @id @default(cuid())
+  bookingId      String
+  booking        Booking      @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  serviceAddonId String
+  serviceAddon   ServiceAddon @relation(fields: [serviceAddonId], references: [id])
+  /// Preis zum Buchungszeitpunkt (Snapshot) – spätere Preisänderungen im Admin
+  /// wirken sich nicht rückwirkend auf bestehende Buchungen aus.
+  preisCentSnapshot Int
+  nameSnapshot      String
+
+  @@index([bookingId])
+}
+
+/// Treue-Gutschein "1 Tag gratis bei der nächsten Buchung". An die E-Mail-Adresse
+/// des Kunden gebunden, einmalig einlösbar. Der Wert wird bei Einlösung anhand des
+/// Langzeit-Tagespreises (>7 Tage) des jeweils gebuchten Produkts berechnet.
+model Voucher {
+  id               String    @id @default(cuid())
+  code             String    @unique
+  customerId       String
+  customer         Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  issuedAt         DateTime  @default(now())
+  redeemedAt       DateTime?
+  redeemedBookingId String?  @unique
+  redeemedBooking  Booking?  @relation("VoucherRedemption", fields: [redeemedBookingId], references: [id])
+
+  @@index([customerId])
+}
+
+model Vehicle {
+  id             String   @id @default(cuid())
+  bookingId      String   @unique
+  booking        Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  kennzeichen    String
+  marke          String?
+  farbe          String?
+  auffaelligkeiten String?
+}
+
+model Payment {
+  id                    String        @id @default(cuid())
+  bookingId             String        @unique
+  booking               Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  stripeCheckoutSessionId String?     @unique
+  stripePaymentIntentId String?       @unique
+  betragCent            Int
+  erstattetCent         Int           @default(0)
+  status                PaymentStatus @default(OFFEN)
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+}
+
+model Booking {
+  id              String        @id @default(cuid())
+  bookingNumber   String        @unique
+  customerId      String
+  customer        Customer      @relation(fields: [customerId], references: [id])
+  productId       String
+  product         Product       @relation(fields: [productId], references: [id])
+  status          BookingStatus @default(ANGEFRAGT)
+
+  anreise         DateTime
+  abreise         DateTime
+  flugnummer      String?
+
+  preisTageCent      Int
+  preisAddonsCent    Int         @default(0)
+  gutscheinRabattCent Int        @default(0)
+  preisGesamtCent    Int
+  preisBreakdown     Json
+
+  /// Zum Buchungszeitpunkt gültige Storno-Konditionen (Snapshot aus Settings) –
+  /// spätere Admin-Änderungen wirken sich nicht rückwirkend auf diese Buchung aus.
+  stornoFristStunden         Int @default(48)
+  stornoErstattungFruehProzent Int @default(100)
+  stornoErstattungSpaetProzent Int @default(50)
+
+  storniertAm     DateTime?
+  erstattungProzent Int?
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  vehicle         Vehicle?
+  payment         Payment?
+  addons          BookingAddon[]
+  voucherRedemption Voucher?    @relation("VoucherRedemption")
+
+  @@index([customerId])
+  @@index([productId, anreise, abreise])
+}
+
+/// Globale, im Admin änderbare Einstellungen (Singleton-Row, id = "default").
+model Settings {
+  id                     String @id @default("default")
+  stornoFristStunden     Int    @default(48)
+  stornoErstattungFrueh  Int    @default(100)
+  stornoErstattungSpaet  Int    @default(50)
+  updatedAt              DateTime @updatedAt
+}
