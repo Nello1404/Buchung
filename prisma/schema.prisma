@@ -56,11 +56,30 @@ model Product {
   bookings     Booking[]
 }
 
-/// Preis pro Tag, gestaffelt nach Parkdauer (volle Kalendertage), je Produkt.
+/// Fahrzeugklasse (z. B. Kleinwagen/Mittelklasse/SUV & Van) – frei im Admin
+/// erweiterbar. Bestimmt eigene Preistabellen für Parkgebühr (TariffRule/
+/// SeasonRate) und Zusatzservices (ServiceAddonPrice). Beeinflusst NICHT das
+/// Tages-Kontingent (jede Buchung belegt weiterhin genau 1 Slot/Tag).
+model VehicleClass {
+  id                String             @id @default(cuid())
+  code              String             @unique
+  name              String
+  sortOrder         Int                @default(0)
+  active            Boolean            @default(true)
+  tariffRules       TariffRule[]
+  seasonRates       SeasonRate[]
+  addonPrices       ServiceAddonPrice[]
+  vehicles          Vehicle[]
+}
+
+/// Preis pro Tag, gestaffelt nach Parkdauer (volle Kalendertage), je Produkt UND
+/// Fahrzeugklasse (komplett eigene Preistabelle je Klasse).
 model TariffRule {
   id             String   @id @default(cuid())
   productId      String
   product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  vehicleClassId String
+  vehicleClass   VehicleClass @relation(fields: [vehicleClassId], references: [id], onDelete: Cascade)
   minTage        Int
   /// null = unbegrenzt (letzte, offene Staffel, z. B. "ab 15 Tagen")
   maxTage        Int?
@@ -68,15 +87,17 @@ model TariffRule {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  @@index([productId])
+  @@index([productId, vehicleClassId])
 }
 
-/// Saison-Zeitraum mit eigenem (festen) Tagespreis je Produkt – ersetzt für Tage
-/// innerhalb des Zeitraums den regulären Staffelpreis aus TariffRule.
+/// Saison-Zeitraum mit eigenem (festen) Tagespreis je Produkt UND Fahrzeugklasse –
+/// ersetzt für Tage innerhalb des Zeitraums den regulären Staffelpreis aus TariffRule.
 model SeasonRate {
   id             String   @id @default(cuid())
   productId      String
   product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  vehicleClassId String
+  vehicleClass   VehicleClass @relation(fields: [vehicleClassId], references: [id], onDelete: Cascade)
   name           String
   startDate      DateTime @db.Date
   endDate        DateTime @db.Date
@@ -84,7 +105,7 @@ model SeasonRate {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  @@index([productId, startDate, endDate])
+  @@index([productId, vehicleClassId, startDate, endDate])
 }
 
 /// Sperrtage: an diesen Tagen ist das Produkt (oder bei productId=null: global) nicht buchbar.
@@ -118,12 +139,25 @@ model ServiceAddon {
   code        String   @unique
   name        String
   description String?
-  preisCent   Int
   active      Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   bookingAddons BookingAddon[]
+  preise        ServiceAddonPrice[]
+}
+
+/// Preis eines Zusatzservices – eigene Preistabelle je Fahrzeugklasse
+/// (z. B. Aufbereitung SUV teurer als Kleinwagen).
+model ServiceAddonPrice {
+  id             String       @id @default(cuid())
+  serviceAddonId String
+  serviceAddon   ServiceAddon @relation(fields: [serviceAddonId], references: [id], onDelete: Cascade)
+  vehicleClassId String
+  vehicleClass   VehicleClass @relation(fields: [vehicleClassId], references: [id], onDelete: Cascade)
+  preisCent      Int
+
+  @@unique([serviceAddonId, vehicleClassId])
 }
 
 model BookingAddon {
@@ -164,6 +198,13 @@ model Vehicle {
   marke          String?
   farbe          String?
   auffaelligkeiten String?
+
+  /// Vom Kunden bei Buchung gewählte Fahrzeugklasse (bestimmt den Preis).
+  /// Eine Korrektur durch das Personal bei Übergabe inkl. Nachberechnung folgt
+  /// in Phase 3 zusammen mit dem Übergabeprotokoll.
+  vehicleClassId       String
+  vehicleClass         VehicleClass @relation(fields: [vehicleClassId], references: [id])
+  vehicleClassNameSnapshot String
 }
 
 model Payment {
