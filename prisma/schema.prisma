@@ -216,8 +216,13 @@ model Payment {
   betragCent            Int
   erstattetCent         Int           @default(0)
   status                PaymentStatus @default(OFFEN)
+  /// Zeitpunkt des Zahlungseingangs (gesetzt vom Stripe-Webhook). Stichtag für
+  /// die Umsatzauswertung im Cockpit.
+  bezahltAm             DateTime?
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
+
+  @@index([bezahltAm])
 }
 
 model Booking {

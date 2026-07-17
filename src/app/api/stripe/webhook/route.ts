@@ -55,7 +55,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   await prisma.$transaction(async (tx) => {
     await tx.payment.update({
       where: { id: payment.id },
-      data: { status: "BEZAHLT", stripePaymentIntentId: paymentIntentId },
+      data: { status: "BEZAHLT", stripePaymentIntentId: paymentIntentId, bezahltAm: new Date() },
     });
     await tx.booking.update({
       where: { id: payment.bookingId },
