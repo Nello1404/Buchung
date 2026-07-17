@@ -273,7 +273,25 @@ model Settings {
   stornoErstattungSpaet  Int    @default(50)
   /// Empfohlener Steuer-Rücklagensatz in % vom Monatsergebnis (Gewinn).
   steuerRuecklageProzent Int    @default(25)
+  /// Frühwarn-Schwellen (im Cockpit änderbar).
+  warnAuslastungProzent  Int    @default(40)
+  warnTagVollProzent     Int    @default(90)
+  warnStornoquoteProzent Int    @default(20)
   updatedAt              DateTime @updatedAt
+}
+
+/// Planwerte je Monat (aus der Kalkulations-Excel eingetragen) für die Plan-Ist-Ampel.
+model PlanMonth {
+  id                       String   @id @default(cuid())
+  jahr                     Int
+  monat                    Int
+  auslastungValetProzent   Int      @default(0)
+  auslastungShuttleProzent Int      @default(0)
+  umsatzCent               Int      @default(0)
+  kostenCent               Int      @default(0)
+  updatedAt                DateTime @updatedAt
+
+  @@unique([jahr, monat])
 }
 
 // ---- Betriebszentrale Phase 3: Einnahmen/Ausgaben (leichtgewichtig) ----
@@ -284,6 +302,8 @@ model ExpenseCategory {
   name      String   @unique
   sortOrder Int      @default(0)
   active    Boolean  @default(true)
+  /// Optionales Monatsbudget (Brutto, Cent). Überschreitung löst Frühwarnung aus.
+  monatsBudgetCent Int?
   createdAt DateTime @default(now())
 
   expenses  Expense[]

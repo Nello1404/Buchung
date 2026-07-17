@@ -90,10 +90,13 @@ export function Cockpit({ initial }: { initial: CockpitData }) {
           <div className="flex gap-3 text-sm">
             <Link href="/cockpit/umsatz" className="btn-outline !px-4 !py-2 text-sm">Umsatz</Link>
             <Link href="/cockpit/finanzen" className="btn-outline !px-4 !py-2 text-sm">Finanzen</Link>
+            <Link href="/cockpit/plan" className="btn-outline !px-4 !py-2 text-sm">Plan-Ist</Link>
             <Link href="/admin" className="btn-outline !px-4 !py-2 text-sm">Admin</Link>
             <Link href="/cockpit/tv" className="btn-outline !px-4 !py-2 text-sm" target="_blank">TV-Modus</Link>
           </div>
         </div>
+
+        <Warnbanner />
 
         {/* Heute-Kopfzeile */}
         <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-6">
@@ -196,6 +199,39 @@ export function Cockpit({ initial }: { initial: CockpitData }) {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function Warnbanner() {
+  const [warnungen, setWarnungen] = useState<{ schwere: string; text: string }[]>([]);
+  useEffect(() => {
+    const lade = () =>
+      fetch("/api/cockpit/warnungen", { cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : { warnungen: [] }))
+        .then((d) => setWarnungen(d.warnungen ?? []))
+        .catch(() => {});
+    lade();
+    const id = setInterval(lade, 60000);
+    return () => clearInterval(id);
+  }, []);
+
+  if (warnungen.length === 0) return null;
+  return (
+    <div className="mt-5 space-y-2">
+      {warnungen.map((w, i) => (
+        <div
+          key={i}
+          className={`flex items-start gap-2 rounded-lg border px-4 py-2.5 text-sm ${
+            w.schwere === "warnung"
+              ? "border-[rgba(217,138,128,0.4)] bg-[rgba(217,138,128,0.08)] text-[var(--danger)]"
+              : "border-line-gold bg-[rgba(200,164,92,0.06)] text-gold"
+          }`}
+        >
+          <span>{w.schwere === "warnung" ? "⚠" : "ⓘ"}</span>
+          <span className="text-ink">{w.text}</span>
+        </div>
+      ))}
     </div>
   );
 }
