@@ -67,7 +67,10 @@ export async function berechneAngebot(input: QuoteInput) {
   const [tariffRules, seasonRates, blockedDaysGlobal, blockedDaysProdukt, addonPreise, verfuegbarkeit, voucher] =
     await Promise.all([
       prisma.tariffRule.findMany({ where: { productId: product.id, vehicleClassId: vehicleClass.id } }),
-      prisma.seasonRate.findMany({ where: { productId: product.id, vehicleClassId: vehicleClass.id } }),
+      // Saison-Regeln: produktweite Zuschläge (vehicleClassId = null) ODER klassenspezifische.
+      prisma.seasonRate.findMany({
+        where: { productId: product.id, OR: [{ vehicleClassId: null }, { vehicleClassId: vehicleClass.id }] },
+      }),
       prisma.blockedDay.findMany({ where: { productId: null, date: { in: tage } } }),
       prisma.blockedDay.findMany({ where: { productId: product.id, date: { in: tage } } }),
       input.addonCodes.length

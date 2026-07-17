@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { AufraeumenButton } from "@/components/admin/AufraeumenButton";
 import { centZuEUR } from "@/lib/format";
 import { berlinKalendertag } from "@/lib/date";
 
@@ -49,6 +50,16 @@ export default async function AdminDashboard() {
         <Link href="/admin/tarife" className="btn-gold mt-4 !px-5 !py-2 text-sm">
           Preise &amp; Tarife bearbeiten
         </Link>
+      </div>
+
+      <div className="mt-6 card p-6">
+        <h2 className="font-medium text-ink">Wartung (Testphase)</h2>
+        <p className="mt-1 text-sm text-muted">
+          Entfernt alle stornierten Buchungen aus dem System – nützlich, um Testbuchungen aufzuräumen.
+        </p>
+        <div className="mt-4">
+          <AufraeumenButton />
+        </div>
       </div>
     </div>
   );

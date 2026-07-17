@@ -113,6 +113,20 @@ describe("berechnePreis – Saison-Aufschlag", () => {
     expect(ergebnis.preisTageCent).toBe(3 * 5500);
   });
 
+  it("wendet einen prozentualen Saison-Zuschlag auf den Staffelpreis an", () => {
+    const ergebnis = berechnePreis({
+      anreise: d("2026-07-01"),
+      abreise: d("2026-07-04"), // 3 Tage, Staffel 1-3 = 4500/Tag
+      tariffRules: valetRules,
+      seasonRates: [{ startDate: d("2026-06-27"), endDate: d("2026-08-04"), zuschlagProzent: 20 }],
+      blockedDays: [],
+      addons: [],
+    });
+    // 4500 + 20% = 5400 pro Tag
+    expect(ergebnis.tagesliste.every((t) => t.saison)).toBe(true);
+    expect(ergebnis.preisTageCent).toBe(3 * 5400);
+  });
+
   it("berechnet gemischte Zeiträume tageweise (teils Saison, teils regulär)", () => {
     const ergebnis = berechnePreis({
       anreise: d("2026-08-02"),

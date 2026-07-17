@@ -88,57 +88,25 @@ async function main() {
     ],
   });
 
-  // Beispiel-Saisonzeitraum (Sommerferien Hessen 2026) mit eigenem Tagespreis je Klasse.
+  // Beispiel-Saisonzeitraum als prozentualer Zuschlag je Produkt (gilt für alle Klassen).
   await prisma.seasonRate.deleteMany({});
   await prisma.seasonRate.createMany({
     data: [
       {
         productId: valet.id,
-        vehicleClassId: kleinwagen.id,
-        name: "Sommerferien Hessen 2026",
-        startDate: new Date("2026-06-27"),
-        endDate: new Date("2026-08-04"),
-        preisProTagCent: 5500,
-      },
-      {
-        productId: valet.id,
-        vehicleClassId: mittelklasse.id,
-        name: "Sommerferien Hessen 2026",
-        startDate: new Date("2026-06-27"),
-        endDate: new Date("2026-08-04"),
-        preisProTagCent: 6300,
-      },
-      {
-        productId: valet.id,
-        vehicleClassId: suvVan.id,
-        name: "Sommerferien Hessen 2026",
-        startDate: new Date("2026-06-27"),
-        endDate: new Date("2026-08-04"),
-        preisProTagCent: 7100,
+        vehicleClassId: null,
+        name: "Weihnachten 2026",
+        startDate: new Date("2026-12-15"),
+        endDate: new Date("2027-01-15"),
+        zuschlagProzent: 20,
       },
       {
         productId: shuttle.id,
-        vehicleClassId: kleinwagen.id,
-        name: "Sommerferien Hessen 2026",
-        startDate: new Date("2026-06-27"),
-        endDate: new Date("2026-08-04"),
-        preisProTagCent: 2700,
-      },
-      {
-        productId: shuttle.id,
-        vehicleClassId: mittelklasse.id,
-        name: "Sommerferien Hessen 2026",
-        startDate: new Date("2026-06-27"),
-        endDate: new Date("2026-08-04"),
-        preisProTagCent: 3100,
-      },
-      {
-        productId: shuttle.id,
-        vehicleClassId: suvVan.id,
-        name: "Sommerferien Hessen 2026",
-        startDate: new Date("2026-06-27"),
-        endDate: new Date("2026-08-04"),
-        preisProTagCent: 3500,
+        vehicleClassId: null,
+        name: "Weihnachten 2026",
+        startDate: new Date("2026-12-15"),
+        endDate: new Date("2027-01-15"),
+        zuschlagProzent: 15,
       },
     ],
   });

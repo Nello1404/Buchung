@@ -7,8 +7,7 @@ import { LoeschButton } from "@/components/admin/LoeschButton";
 const produktLabel = (code: string) => (code === "VALET" ? "Valet" : code === "SHUTTLE" ? "Shuttle" : code);
 
 export default async function SaisonPage() {
-  const [vehicleClasses, seasonRates, blockedDays] = await Promise.all([
-    prisma.vehicleClass.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" } }),
+  const [seasonRates, blockedDays] = await Promise.all([
     prisma.seasonRate.findMany({
       include: { product: true, vehicleClass: true },
       orderBy: [{ startDate: "asc" }],
@@ -23,14 +22,14 @@ export default async function SaisonPage() {
     <div>
       <h1 className="font-serif text-2xl font-semibold text-ink">Saison &amp; Sperrtage</h1>
       <p className="mt-1 text-sm text-muted">
-        Saison-Festpreise ersetzen für die betroffenen Tage den regulären Staffelpreis. Sperrtage sind für neue
-        Buchungen blockiert. Beides gilt sofort für neue Buchungen.
+        Saison-Zuschläge erhöhen für die betroffenen Tage den Staffelpreis um einen Prozentsatz (je Produkt).
+        Sperrtage sind für neue Buchungen blockiert. Beides gilt sofort für neue Buchungen.
       </p>
 
       {/* Saisonpreise */}
       <section className="mt-8">
-        <h2 className="font-medium text-ink">Saisonpreise</h2>
-        <SaisonForm vehicleClasses={vehicleClasses.map((v) => ({ id: v.id, name: v.name }))} />
+        <h2 className="font-medium text-ink">Saison-Zuschläge</h2>
+        <SaisonForm />
 
         <div className="mt-6 card overflow-hidden">
           <div className="border-b border-line px-5 py-4">
@@ -47,7 +46,7 @@ export default async function SaisonPage() {
                     <th className="px-5 py-3 font-medium">Produkt</th>
                     <th className="px-5 py-3 font-medium">Fahrzeugklasse</th>
                     <th className="px-5 py-3 font-medium">Zeitraum</th>
-                    <th className="px-5 py-3 font-medium">Preis/Tag</th>
+                    <th className="px-5 py-3 font-medium">Zuschlag / Preis</th>
                     <th className="px-5 py-3 font-medium"></th>
                   </tr>
                 </thead>
@@ -56,11 +55,13 @@ export default async function SaisonPage() {
                     <tr key={s.id} className="border-b border-line last:border-0">
                       <td className="px-5 py-3 text-ink">{s.name}</td>
                       <td className="px-5 py-3 text-muted">{produktLabel(s.product.code)}</td>
-                      <td className="px-5 py-3 text-muted">{s.vehicleClass.name}</td>
+                      <td className="px-5 py-3 text-muted">{s.vehicleClass?.name ?? "alle"}</td>
                       <td className="px-5 py-3 text-muted">
                         {formatDatum.format(s.startDate)} – {formatDatum.format(s.endDate)}
                       </td>
-                      <td className="px-5 py-3 text-ink">{centZuEUR(s.preisProTagCent)}</td>
+                      <td className="px-5 py-3 text-ink">
+                        {s.zuschlagProzent != null ? `+${s.zuschlagProzent} %` : s.preisProTagCent != null ? centZuEUR(s.preisProTagCent) : "–"}
+                      </td>
                       <td className="px-5 py-3 text-right">
                         <LoeschButton endpoint="/api/admin/saison" id={s.id} />
                       </td>

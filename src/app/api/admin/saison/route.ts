@@ -6,11 +6,11 @@ import { ProductCode } from "@/generated/prisma/client";
 
 const createSchema = z.object({
   productCode: z.enum(["VALET", "SHUTTLE"]),
-  vehicleClassId: z.string().min(1),
   name: z.string().trim().min(2).max(80),
   vonDatum: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   bisDatum: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  preisProTagCent: z.number().int().min(0).max(1_000_000),
+  /** Prozentualer Zuschlag auf den Staffelpreis; gilt für alle Fahrzeugklassen des Produkts. */
+  zuschlagProzent: z.number().int().min(1).max(500),
 });
 
 const deleteSchema = z.object({ id: z.string().min(1) });
@@ -29,12 +29,8 @@ export async function POST(request: Request) {
   const parsed = createSchema.safeParse(json);
   if (!parsed.success) return NextResponse.json({ error: "Ungültige Eingabe." }, { status: 400 });
 
-  const [product, vehicleClass] = await Promise.all([
-    prisma.product.findUnique({ where: { code: parsed.data.productCode as ProductCode } }),
-    prisma.vehicleClass.findUnique({ where: { id: parsed.data.vehicleClassId } }),
-  ]);
+  const product = await prisma.product.findUnique({ where: { code: parsed.data.productCode as ProductCode } });
   if (!product) return NextResponse.json({ error: "Produkt nicht gefunden." }, { status: 404 });
-  if (!vehicleClass) return NextResponse.json({ error: "Fahrzeugklasse nicht gefunden." }, { status: 404 });
 
   const von = toDbDate(parsed.data.vonDatum);
   const bis = toDbDate(parsed.data.bisDatum);
@@ -45,11 +41,11 @@ export async function POST(request: Request) {
   await prisma.seasonRate.create({
     data: {
       productId: product.id,
-      vehicleClassId: vehicleClass.id,
+      vehicleClassId: null, // gilt für alle Fahrzeugklassen des Produkts
       name: parsed.data.name,
       startDate: von,
       endDate: bis,
-      preisProTagCent: parsed.data.preisProTagCent,
+      zuschlagProzent: parsed.data.zuschlagProzent,
     },
   });
 

@@ -92,16 +92,22 @@ model TariffRule {
 
 /// Saison-Zeitraum mit eigenem (festen) Tagespreis je Produkt UND Fahrzeugklasse –
 /// ersetzt für Tage innerhalb des Zeitraums den regulären Staffelpreis aus TariffRule.
+/// Saison-Zeitraum je Produkt. Entweder prozentualer Zuschlag auf den Basis-
+/// Staffelpreis (zuschlagProzent, gilt für alle Fahrzeugklassen des Produkts, wenn
+/// vehicleClassId = null) ODER ein fester Tagespreis (preisProTagCent, je Klasse).
 model SeasonRate {
   id             String   @id @default(cuid())
   productId      String
   product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  vehicleClassId String
-  vehicleClass   VehicleClass @relation(fields: [vehicleClassId], references: [id], onDelete: Cascade)
+  vehicleClassId String?
+  vehicleClass   VehicleClass? @relation(fields: [vehicleClassId], references: [id], onDelete: Cascade)
   name           String
   startDate      DateTime @db.Date
   endDate        DateTime @db.Date
-  preisProTagCent Int
+  /// Fester Tagespreis (optional; wenn gesetzt, ersetzt er den Staffelpreis).
+  preisProTagCent Int?
+  /// Prozentualer Zuschlag auf den Staffelpreis (optional; z. B. 20 = +20 %).
+  zuschlagProzent Int?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 

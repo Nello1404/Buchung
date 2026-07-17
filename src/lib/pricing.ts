@@ -23,7 +23,10 @@ export interface TariffRuleInput {
 export interface SeasonRateInput {
   startDate: Date;
   endDate: Date;
-  preisProTagCent: number;
+  /** Fester Tagespreis (ersetzt den Staffelpreis), falls gesetzt. */
+  preisProTagCent?: number | null;
+  /** Prozentualer Zuschlag auf den Staffelpreis (z. B. 20 = +20 %), falls gesetzt. */
+  zuschlagProzent?: number | null;
 }
 
 export interface BlockedDayInput {
@@ -84,11 +87,25 @@ function tagespreis(
   tariffRules: TariffRuleInput[],
   seasonRates: SeasonRateInput[]
 ): TagespreisEintrag {
-  const season = seasonRates.find((s) => liegtImZeitraum(datum, s.startDate, s.endDate));
-  if (season) {
-    return { datum, preisCent: season.preisProTagCent, saison: true };
-  }
   const regel = findeTarifRegel(tariffRules, gesamtTage);
+  const season = seasonRates.find((s) => liegtImZeitraum(datum, s.startDate, s.endDate));
+
+  if (season) {
+    // Fester Saison-Tagespreis hat Vorrang, wenn gesetzt.
+    if (season.preisProTagCent != null) {
+      return { datum, preisCent: season.preisProTagCent, saison: true };
+    }
+    // Prozentualer Zuschlag auf den Staffelpreis.
+    if (season.zuschlagProzent != null) {
+      if (!regel) throw new KeinTarifError(gesamtTage);
+      return {
+        datum,
+        preisCent: Math.round(regel.preisProTagCent * (1 + season.zuschlagProzent / 100)),
+        saison: true,
+      };
+    }
+  }
+
   if (!regel) {
     throw new KeinTarifError(gesamtTage);
   }
