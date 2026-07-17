@@ -345,6 +345,14 @@ model RecurringExpense {
   expenses   Expense[]
 }
 
+/// Pflegbare Inhaltsseiten (Impressum, Datenschutz, AGB). Inhalt vom Anwalt.
+model ContentPage {
+  slug      String   @id
+  titel     String
+  inhalt    String   @default("")
+  updatedAt DateTime @updatedAt
+}
+
 /// Audit-Log für Änderungen an Finanzdaten (wer, wann, was).
 model AuditLog {
   id        String   @id @default(cuid())

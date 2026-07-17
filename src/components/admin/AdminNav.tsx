@@ -11,6 +11,7 @@ const links = [
   { href: "/admin/saison", label: "Saison & Sperrtage" },
   { href: "/admin/kapazitaet", label: "Kapazität" },
   { href: "/admin/gutscheine", label: "Gutscheine" },
+  { href: "/admin/inhalte", label: "Rechtstexte" },
 ];
 
 export function AdminNav({ email }: { email: string }) {
