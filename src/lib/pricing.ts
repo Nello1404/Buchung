@@ -45,6 +45,14 @@ export interface TagespreisEintrag {
   saison: boolean;
 }
 
+export type GutscheinTyp = "TAG_GRATIS" | "PROZENT" | "BETRAG";
+
+export interface GutscheinInput {
+  typ: GutscheinTyp;
+  /** PROZENT: Prozentsatz; BETRAG: Cent; TAG_GRATIS: ungenutzt. */
+  wert: number;
+}
+
 export interface PreisBerechnungParams {
   anreise: Date;
   abreise: Date;
@@ -52,8 +60,8 @@ export interface PreisBerechnungParams {
   seasonRates: SeasonRateInput[];
   blockedDays: BlockedDayInput[];
   addons: AddonInput[];
-  /** Gutschein "1 Tag gratis" anwenden (Gültigkeit/Einlösbarkeit wird vom Aufrufer geprüft). */
-  gutscheinAnwenden?: boolean;
+  /** Anzuwendender Gutschein (Gültigkeit/Einlösbarkeit prüft der Aufrufer). */
+  gutschein?: GutscheinInput | null;
 }
 
 export interface PreisBerechnungErgebnis {
@@ -144,12 +152,20 @@ export function berechnePreis(params: PreisBerechnungParams): PreisBerechnungErg
   const addonBreakdown = addons.map((a) => ({ code: a.code, name: a.name, preisCent: a.preisCent }));
   const preisAddonsCent = addonBreakdown.reduce((sum, a) => sum + a.preisCent, 0);
 
+  const zwischensumme = preisTageCent + preisAddonsCent;
   let gutscheinRabattCent = 0;
-  if (params.gutscheinAnwenden) {
-    gutscheinRabattCent = Math.min(gutscheinWertCent(tariffRules), preisTageCent);
+  if (params.gutschein) {
+    const g = params.gutschein;
+    if (g.typ === "TAG_GRATIS") {
+      gutscheinRabattCent = Math.min(gutscheinWertCent(tariffRules), preisTageCent);
+    } else if (g.typ === "PROZENT") {
+      gutscheinRabattCent = Math.min(Math.round((zwischensumme * g.wert) / 100), zwischensumme);
+    } else if (g.typ === "BETRAG") {
+      gutscheinRabattCent = Math.min(g.wert, zwischensumme);
+    }
   }
 
-  const preisGesamtCent = Math.max(preisTageCent + preisAddonsCent - gutscheinRabattCent, 0);
+  const preisGesamtCent = Math.max(zwischensumme - gutscheinRabattCent, 0);
 
   return {
     tage,

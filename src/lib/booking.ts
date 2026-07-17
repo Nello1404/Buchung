@@ -31,6 +31,8 @@ export interface VoucherPruefung {
   gueltig: boolean;
   grund?: string;
   voucherId?: string;
+  typ?: "TAG_GRATIS" | "PROZENT" | "BETRAG";
+  wert?: number;
 }
 
 export async function pruefeGutschein(
@@ -38,7 +40,6 @@ export async function pruefeGutschein(
   email: string | undefined
 ): Promise<VoucherPruefung> {
   if (!code) return { gueltig: false };
-  if (!email) return { gueltig: false, grund: "Bitte zuerst E-Mail-Adresse angeben." };
 
   const voucher = await prisma.voucher.findUnique({
     where: { code },
@@ -46,10 +47,16 @@ export async function pruefeGutschein(
   });
   if (!voucher) return { gueltig: false, grund: "Gutscheincode nicht gefunden." };
   if (voucher.redeemedAt) return { gueltig: false, grund: "Gutschein wurde bereits eingelöst." };
-  if (voucher.customer.email.toLowerCase() !== email.trim().toLowerCase()) {
-    return { gueltig: false, grund: "Gutschein ist an eine andere E-Mail-Adresse gebunden." };
+
+  // An einen Kunden gebundene Gutscheine (Treueaktion) erfordern die passende E-Mail.
+  if (voucher.customerId) {
+    if (!email) return { gueltig: false, grund: "Bitte zuerst E-Mail-Adresse angeben." };
+    if (voucher.customer?.email.toLowerCase() !== email.trim().toLowerCase()) {
+      return { gueltig: false, grund: "Gutschein ist an eine andere E-Mail-Adresse gebunden." };
+    }
   }
-  return { gueltig: true, voucherId: voucher.id };
+
+  return { gueltig: true, voucherId: voucher.id, typ: voucher.typ, wert: voucher.wert };
 }
 
 export async function berechneAngebot(input: QuoteInput) {
@@ -99,7 +106,7 @@ export async function berechneAngebot(input: QuoteInput) {
     seasonRates,
     blockedDays: [...blockedDaysGlobal, ...blockedDaysProdukt],
     addons,
-    gutscheinAnwenden: voucher.gueltig,
+    gutschein: voucher.gueltig && voucher.typ ? { typ: voucher.typ, wert: voucher.wert ?? 0 } : null,
   });
 
   return {

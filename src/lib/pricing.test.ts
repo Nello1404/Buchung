@@ -192,7 +192,7 @@ describe("Gutschein '1 Tag gratis'", () => {
       seasonRates: [],
       blockedDays: [],
       addons: [],
-      gutscheinAnwenden: true,
+      gutschein: { typ: "TAG_GRATIS", wert: 0 },
     });
     expect(ergebnis.gutscheinRabattCent).toBe(3300);
     expect(ergebnis.preisGesamtCent).toBe(9000 - 3300);
@@ -210,11 +210,42 @@ describe("Gutschein '1 Tag gratis'", () => {
       seasonRates: [],
       blockedDays: [],
       addons: [],
-      gutscheinAnwenden: true,
+      gutschein: { typ: "TAG_GRATIS", wert: 0 },
     });
     expect(ergebnis.preisTageCent).toBe(1000);
     expect(ergebnis.gutscheinRabattCent).toBe(1000);
     expect(ergebnis.preisGesamtCent).toBe(0);
+  });
+});
+
+describe("Gutschein – Rabattaktionen (PROZENT/BETRAG)", () => {
+  it("zieht einen prozentualen Rabatt von Parken + Zusatzservices ab", () => {
+    const ergebnis = berechnePreis({
+      anreise: d("2026-01-10"),
+      abreise: d("2026-01-13"), // 3 Tage à 4500 = 13500
+      tariffRules: valetRules,
+      seasonRates: [],
+      blockedDays: [],
+      addons: [{ code: "x", name: "Aufbereitung", preisCent: 3900 }],
+      gutschein: { typ: "PROZENT", wert: 20 },
+    });
+    const zwischensumme = 13500 + 3900; // 17400
+    expect(ergebnis.gutscheinRabattCent).toBe(Math.round(zwischensumme * 0.2)); // 3480
+    expect(ergebnis.preisGesamtCent).toBe(zwischensumme - Math.round(zwischensumme * 0.2));
+  });
+
+  it("zieht einen festen Euro-Rabatt ab, gedeckelt auf die Zwischensumme", () => {
+    const ergebnis = berechnePreis({
+      anreise: d("2026-01-10"),
+      abreise: d("2026-01-13"), // 13500
+      tariffRules: valetRules,
+      seasonRates: [],
+      blockedDays: [],
+      addons: [],
+      gutschein: { typ: "BETRAG", wert: 5000 },
+    });
+    expect(ergebnis.gutscheinRabattCent).toBe(5000);
+    expect(ergebnis.preisGesamtCent).toBe(13500 - 5000);
   });
 });
 

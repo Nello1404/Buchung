@@ -180,14 +180,23 @@ model BookingAddon {
   @@index([bookingId])
 }
 
-/// Treue-Gutschein "1 Tag gratis bei der nächsten Buchung". An die E-Mail-Adresse
-/// des Kunden gebunden, einmalig einlösbar. Der Wert wird bei Einlösung anhand des
-/// Langzeit-Tagespreises (>7 Tage) des jeweils gebuchten Produkts berechnet.
+enum VoucherTyp {
+  TAG_GRATIS // 1 Tag gratis (Langzeit-Tagespreis des Produkts)
+  PROZENT    // prozentualer Rabatt auf Parken + Zusatzservices
+  BETRAG     // fester Euro-Rabatt (in Cent)
+}
+
+/// Gutschein/Rabattcode – einmalig einlösbar. Kann an einen Kunden gebunden sein
+/// (Treueaktion) oder generisch für eine Rabattaktion (customerId = null).
 model Voucher {
   id               String    @id @default(cuid())
   code             String    @unique
-  customerId       String
-  customer         Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  typ              VoucherTyp @default(TAG_GRATIS)
+  /// Wert je nach Typ: PROZENT = Prozentsatz, BETRAG = Cent, TAG_GRATIS = ungenutzt.
+  wert             Int       @default(0)
+  bezeichnung      String?
+  customerId       String?
+  customer         Customer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
   issuedAt         DateTime  @default(now())
   redeemedAt       DateTime?
   redeemedBookingId String?  @unique
