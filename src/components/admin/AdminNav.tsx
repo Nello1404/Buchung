@@ -7,6 +7,7 @@ const links = [
   { href: "/admin", label: "Dashboard" },
   { href: "/admin/buchungen", label: "Buchungen" },
   { href: "/admin/tarife", label: "Preise & Tarife" },
+  { href: "/admin/saison", label: "Saison & Sperrtage" },
   { href: "/admin/kapazitaet", label: "Kapazität" },
   { href: "/admin/gutscheine", label: "Gutscheine" },
 ];
