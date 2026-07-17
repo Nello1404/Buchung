@@ -1,26 +1,166 @@
 @import "tailwindcss";
 
+/*
+ * FlySpot Valet – Premium-Design-System
+ * Anthrazit-Basis mit feinen Gold-Akzenten, elegante Serifen-Headlines.
+ * Bewusst als fester dunkler Marken-Look (kein System-Light-Mode), damit der
+ * hochwertige Eindruck überall gleich wirkt.
+ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #0d0f13;
+  --bg-elev: #14171e;
+  --bg-elev-2: #1b1f28;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-gold: rgba(200, 164, 92, 0.35);
+
+  --text: #f4f1ea;
+  --text-muted: #a8a49a;
+  --text-subtle: #78746b;
+
+  --gold: #c8a45c;
+  --gold-light: #e6cf97;
+  --gold-dark: #9c7c38;
+
+  --success: #6fae7d;
+  --danger: #d98a80;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-bg: var(--bg);
+  --color-surface: var(--bg-elev);
+  --color-surface-2: var(--bg-elev-2);
+  --color-line: var(--border);
+  --color-line-gold: var(--border-gold);
+  --color-ink: var(--text);
+  --color-muted: var(--text-muted);
+  --color-subtle: var(--text-subtle);
+  --color-gold: var(--gold);
+  --color-gold-light: var(--gold-light);
+  --color-gold-dark: var(--gold-dark);
+
   --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-playfair);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  border-color: var(--border);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Feiner, wiederverwendbarer Gold-Farbverlauf für Akzente/Trennlinien */
+.gold-gradient {
+  background-image: linear-gradient(135deg, var(--gold-light), var(--gold) 45%, var(--gold-dark));
+}
+
+.text-gold-gradient {
+  background-image: linear-gradient(135deg, var(--gold-light), var(--gold) 55%, var(--gold-dark));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Kleine Überschrift/„Eyebrow" über Headlines */
+.eyebrow {
+  font-size: 0.75rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 600;
+}
+
+/* Primärer Gold-Button */
+.btn-gold {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-image: linear-gradient(135deg, var(--gold-light), var(--gold) 55%, var(--gold-dark));
+  color: #1a140a;
+  font-weight: 600;
+  border-radius: 9999px;
+  padding: 0.85rem 1.75rem;
+  transition: filter 0.2s ease, transform 0.2s ease;
+  box-shadow: 0 8px 30px -12px rgba(200, 164, 92, 0.6);
+}
+.btn-gold:hover {
+  filter: brightness(1.07);
+  transform: translateY(-1px);
+}
+.btn-gold:disabled {
+  opacity: 0.4;
+  filter: none;
+  transform: none;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Sekundärer, dezent umrandeter Button */
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1px solid var(--border-gold);
+  color: var(--text);
+  font-weight: 500;
+  border-radius: 9999px;
+  padding: 0.85rem 1.75rem;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+.btn-outline:hover {
+  background-color: rgba(200, 164, 92, 0.08);
+  border-color: var(--gold);
+}
+
+/* Karten-Oberfläche */
+.card {
+  background-color: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+}
+
+/* Formularfelder im dunklen Look */
+.field {
+  width: 100%;
+  background-color: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  padding: 0.65rem 0.85rem;
+  color: var(--text);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.field::placeholder {
+  color: var(--text-subtle);
+}
+.field:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(200, 164, 92, 0.15);
+}
+/* Kalender-/Uhr-Symbole in Datums-/Zeitfeldern sichtbar machen */
+.field::-webkit-calendar-picker-indicator {
+  filter: invert(0.8) sepia(0.4) saturate(3) hue-rotate(5deg);
+  cursor: pointer;
+}
+
+/* Dezenter Hero-Hintergrund: warmer Goldschimmer auf Anthrazit */
+.hero-bg {
+  background:
+    radial-gradient(1100px 520px at 72% -8%, rgba(200, 164, 92, 0.16), transparent 60%),
+    radial-gradient(760px 420px at 5% 12%, rgba(200, 164, 92, 0.06), transparent 55%),
+    linear-gradient(180deg, #0d0f13 0%, #0b0d11 100%);
+}
+
+/* Feine Trennlinie mit Gold-Verlauf */
+.hr-gold {
+  height: 1px;
+  border: 0;
+  background-image: linear-gradient(90deg, transparent, var(--border-gold), transparent);
 }

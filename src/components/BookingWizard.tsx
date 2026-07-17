@@ -183,42 +183,53 @@ export default function BookingWizard() {
     }
   }
 
+  const schritte = ["Zeitraum", "Services", "Ihre Daten", "Übersicht"];
+
   return (
     <div className="mx-auto w-full max-w-2xl">
-      <ol className="mb-8 flex justify-between text-xs font-medium text-zinc-500">
-        {["Zeitraum", "Zusatzservices", "Kundendaten", "Zusammenfassung"].map((label, i) => (
-          <li key={label} className={`flex-1 text-center ${step === i + 1 ? "text-blue-900 dark:text-blue-300" : ""}`}>
-            <div
-              className={`mx-auto mb-1 flex h-6 w-6 items-center justify-center rounded-full text-white ${
-                step > i + 1 ? "bg-green-600" : step === i + 1 ? "bg-blue-900" : "bg-zinc-300 dark:bg-zinc-700"
-              }`}
-            >
-              {i + 1}
-            </div>
-            {label}
-          </li>
-        ))}
+      <ol className="mb-8 flex items-center justify-between">
+        {schritte.map((label, i) => {
+          const nr = i + 1;
+          const aktiv = step === nr;
+          const erledigt = step > nr;
+          return (
+            <li key={label} className="flex flex-1 flex-col items-center gap-1.5 text-center">
+              <div
+                className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold transition-colors ${
+                  erledigt
+                    ? "gold-gradient text-[#1a140a]"
+                    : aktiv
+                      ? "border border-line-gold text-gold"
+                      : "border border-line text-subtle"
+                }`}
+              >
+                {erledigt ? "✓" : nr}
+              </div>
+              <span className={`text-xs ${aktiv || erledigt ? "text-ink" : "text-subtle"}`}>{label}</span>
+            </li>
+          );
+        })}
       </ol>
 
-      <div className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+      <div className="card p-6 sm:p-8">
         {step === 1 && (
-          <div className="space-y-6">
+          <div className="space-y-7">
             <div>
-              <span className="mb-2 block text-sm font-medium">Produkt</span>
+              <span className="mb-2.5 block text-sm font-medium text-ink">Produkt</span>
               <div className="grid grid-cols-2 gap-3">
                 {(["VALET", "SHUTTLE"] as const).map((code) => (
                   <button
                     key={code}
                     type="button"
                     onClick={() => setProductCode(code)}
-                    className={`rounded-lg border p-4 text-left transition-colors ${
+                    className={`rounded-xl border p-4 text-left transition-colors ${
                       productCode === code
-                        ? "border-blue-900 bg-blue-50 dark:bg-blue-950"
-                        : "border-zinc-200 dark:border-zinc-700"
+                        ? "border-line-gold bg-[rgba(200,164,92,0.07)]"
+                        : "border-line hover:border-line-gold"
                     }`}
                   >
-                    <div className="font-semibold">{code === "VALET" ? "Valet" : "Shuttle"}</div>
-                    <div className="text-xs text-zinc-500">
+                    <div className="font-medium text-ink">{code === "VALET" ? "Valet" : "Shuttle"}</div>
+                    <div className="mt-0.5 text-xs text-muted">
                       {code === "VALET" ? "Hol & Bring am Terminal" : "Selbstanfahrt, Shuttle zum Terminal"}
                     </div>
                   </button>
@@ -227,8 +238,8 @@ export default function BookingWizard() {
             </div>
 
             <div>
-              <span className="mb-2 block text-sm font-medium">Fahrzeugklasse</span>
-              <p className="mb-2 text-xs text-zinc-500">
+              <span className="mb-1.5 block text-sm font-medium text-ink">Fahrzeugklasse</span>
+              <p className="mb-2.5 text-xs leading-relaxed text-muted">
                 Der Preis richtet sich nach der Fahrzeuggröße. Bei abweichender Fahrzeuggröße
                 behalten wir uns eine Anpassung bei der Übergabe vor.
               </p>
@@ -238,10 +249,10 @@ export default function BookingWizard() {
                     key={vc.code}
                     type="button"
                     onClick={() => setVehicleClassCode(vc.code)}
-                    className={`rounded-lg border p-3 text-center text-sm transition-colors ${
+                    className={`rounded-xl border p-3 text-center text-sm transition-colors ${
                       vehicleClassCode === vc.code
-                        ? "border-blue-900 bg-blue-50 dark:bg-blue-950"
-                        : "border-zinc-200 dark:border-zinc-700"
+                        ? "border-line-gold bg-[rgba(200,164,92,0.07)] text-ink"
+                        : "border-line text-muted hover:border-line-gold"
                     }`}
                   >
                     {vc.name}
@@ -252,48 +263,21 @@ export default function BookingWizard() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="mb-1 block text-sm font-medium">Anreise (Abgabe)</label>
-                <input
-                  type="date"
-                  min={heuteISO()}
-                  value={anreiseDatum}
-                  onChange={(e) => setAnreiseDatum(e.target.value)}
-                  className="w-full rounded-md border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-800"
-                />
-                <input
-                  type="time"
-                  value={anreiseZeit}
-                  onChange={(e) => setAnreiseZeit(e.target.value)}
-                  className="mt-2 w-full rounded-md border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-800"
-                />
+                <label className="mb-1.5 block text-sm font-medium text-ink">Anreise (Abgabe)</label>
+                <input type="date" min={heuteISO()} value={anreiseDatum} onChange={(e) => setAnreiseDatum(e.target.value)} className="field" />
+                <input type="time" value={anreiseZeit} onChange={(e) => setAnreiseZeit(e.target.value)} className="field mt-2" />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium">Abreise (Abholung)</label>
-                <input
-                  type="date"
-                  min={anreiseDatum || heuteISO()}
-                  value={abreiseDatum}
-                  onChange={(e) => setAbreiseDatum(e.target.value)}
-                  className="w-full rounded-md border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-800"
-                />
-                <input
-                  type="time"
-                  value={abreiseZeit}
-                  onChange={(e) => setAbreiseZeit(e.target.value)}
-                  className="mt-2 w-full rounded-md border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-800"
-                />
+                <label className="mb-1.5 block text-sm font-medium text-ink">Abreise (Abholung)</label>
+                <input type="date" min={anreiseDatum || heuteISO()} value={abreiseDatum} onChange={(e) => setAbreiseDatum(e.target.value)} className="field" />
+                <input type="time" value={abreiseZeit} onChange={(e) => setAbreiseZeit(e.target.value)} className="field mt-2" />
               </div>
             </div>
 
             <PreisAnzeige quote={quote} loading={quoteLoading} error={quoteError} />
 
             <div className="flex justify-end">
-              <button
-                type="button"
-                disabled={!schritt1Gueltig}
-                onClick={() => setStep(2)}
-                className="rounded-full bg-blue-900 px-6 py-2 font-semibold text-white disabled:opacity-40"
-              >
+              <button type="button" disabled={!schritt1Gueltig} onClick={() => setStep(2)} className="btn-gold">
                 Weiter
               </button>
             </div>
@@ -302,48 +286,47 @@ export default function BookingWizard() {
 
         {step === 2 && (
           <div className="space-y-6">
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="text-sm leading-relaxed text-muted">
               Zusatzservices werden während Ihrer Standzeit bei uns ausgeführt – Sie müssen dafür keinen
               gesonderten Termin wählen.
             </p>
             <div className="space-y-3">
-              {addonsList.map((addon) => (
-                <label
-                  key={addon.code}
-                  className="flex items-start gap-3 rounded-lg border border-zinc-200 p-3 dark:border-zinc-700"
-                >
-                  <input
-                    type="checkbox"
-                    checked={addonCodes.includes(addon.code)}
-                    onChange={() => toggleAddon(addon.code)}
-                    className="mt-1"
-                  />
-                  <div>
-                    <div className="font-medium">
-                      {addon.name}
-                      {addon.preisCent != null ? ` – ${centZuEUR(addon.preisCent)}` : ""}
+              {addonsList.map((addon) => {
+                const gewaehlt = addonCodes.includes(addon.code);
+                return (
+                  <label
+                    key={addon.code}
+                    className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors ${
+                      gewaehlt ? "border-line-gold bg-[rgba(200,164,92,0.06)]" : "border-line hover:border-line-gold"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={gewaehlt}
+                      onChange={() => toggleAddon(addon.code)}
+                      className="mt-1 h-4 w-4 accent-[var(--gold)]"
+                    />
+                    <div>
+                      <div className="font-medium text-ink">
+                        {addon.name}
+                        {addon.preisCent != null ? (
+                          <span className="text-gold"> – {centZuEUR(addon.preisCent)}</span>
+                        ) : ""}
+                      </div>
+                      {addon.description && <div className="mt-0.5 text-xs text-muted">{addon.description}</div>}
                     </div>
-                    {addon.description && (
-                      <div className="text-xs text-zinc-500">{addon.description}</div>
-                    )}
-                  </div>
-                </label>
-              ))}
+                  </label>
+                );
+              })}
             </div>
 
             <PreisAnzeige quote={quote} loading={quoteLoading} error={quoteError} />
 
-            <div className="flex justify-between">
-              <button type="button" onClick={() => setStep(1)} className="text-sm font-medium text-zinc-600">
-                Zurück
+            <div className="flex items-center justify-between">
+              <button type="button" onClick={() => setStep(1)} className="text-sm font-medium text-muted transition-colors hover:text-ink">
+                ← Zurück
               </button>
-              <button
-                type="button"
-                onClick={() => setStep(3)}
-                className="rounded-full bg-blue-900 px-6 py-2 font-semibold text-white"
-              >
-                Weiter
-              </button>
+              <button type="button" onClick={() => setStep(3)} className="btn-gold">Weiter</button>
             </div>
           </div>
         )}
@@ -352,89 +335,57 @@ export default function BookingWizard() {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <Feld label="Name">
-                <input value={name} onChange={(e) => setName(e.target.value)} className={inputCls} />
+                <input value={name} onChange={(e) => setName(e.target.value)} className="field" />
               </Feld>
               <Feld label="E-Mail">
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className={inputCls}
-                />
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="field" />
               </Feld>
               <Feld label="Telefon (optional)">
-                <input value={telefon} onChange={(e) => setTelefon(e.target.value)} className={inputCls} />
+                <input value={telefon} onChange={(e) => setTelefon(e.target.value)} className="field" />
               </Feld>
               <Feld label={`Flugnummer${productCode === "VALET" ? " *" : " (optional)"}`}>
-                <input
-                  value={flugnummer}
-                  onChange={(e) => setFlugnummer(e.target.value)}
-                  className={inputCls}
-                  placeholder="z. B. LH123"
-                />
+                <input value={flugnummer} onChange={(e) => setFlugnummer(e.target.value)} className="field" placeholder="z. B. LH123" />
               </Feld>
               <Feld label="Kennzeichen">
-                <input
-                  value={kennzeichen}
-                  onChange={(e) => setKennzeichen(e.target.value)}
-                  className={inputCls}
-                  placeholder="z. B. F-AB 1234"
-                />
+                <input value={kennzeichen} onChange={(e) => setKennzeichen(e.target.value)} className="field" placeholder="z. B. F-AB 1234" />
               </Feld>
               <Feld label="Marke/Modell (optional)">
-                <input value={marke} onChange={(e) => setMarke(e.target.value)} className={inputCls} />
+                <input value={marke} onChange={(e) => setMarke(e.target.value)} className="field" />
               </Feld>
               <Feld label="Farbe (optional)">
-                <input value={farbe} onChange={(e) => setFarbe(e.target.value)} className={inputCls} />
+                <input value={farbe} onChange={(e) => setFarbe(e.target.value)} className="field" />
               </Feld>
               <Feld label="Gutscheincode (optional)">
-                <input
-                  value={voucherCode}
-                  onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
-                  className={inputCls}
-                />
+                <input value={voucherCode} onChange={(e) => setVoucherCode(e.target.value.toUpperCase())} className="field" />
               </Feld>
             </div>
             <Feld label="Auffälligkeiten am Fahrzeug (optional)">
-              <textarea
-                value={auffaelligkeiten}
-                onChange={(e) => setAuffaelligkeiten(e.target.value)}
-                className={inputCls}
-                rows={2}
-              />
+              <textarea value={auffaelligkeiten} onChange={(e) => setAuffaelligkeiten(e.target.value)} className="field" rows={2} />
             </Feld>
 
             {voucherCode && quote?.gutschein && !quote.gutschein.gueltig && (
-              <p className="text-sm text-red-600">{quote.gutschein.grund}</p>
+              <p className="text-sm text-[var(--danger)]">{quote.gutschein.grund}</p>
             )}
 
             <PreisAnzeige quote={quote} loading={quoteLoading} error={quoteError} />
 
-            <div className="flex justify-between">
-              <button type="button" onClick={() => setStep(2)} className="text-sm font-medium text-zinc-600">
-                Zurück
+            <div className="flex items-center justify-between">
+              <button type="button" onClick={() => setStep(2)} className="text-sm font-medium text-muted transition-colors hover:text-ink">
+                ← Zurück
               </button>
-              <button
-                type="button"
-                disabled={!schritt3Gueltig}
-                onClick={() => setStep(4)}
-                className="rounded-full bg-blue-900 px-6 py-2 font-semibold text-white disabled:opacity-40"
-              >
-                Weiter zur Zusammenfassung
+              <button type="button" disabled={!schritt3Gueltig} onClick={() => setStep(4)} className="btn-gold">
+                Weiter zur Übersicht
               </button>
             </div>
           </div>
         )}
 
         {step === 4 && quote && (
-          <div className="space-y-4">
-            <h2 className="text-lg font-semibold">Zusammenfassung</h2>
-            <dl className="space-y-1 text-sm">
-              <Zeile label="Produkt" wert={productCode === "VALET" ? "Valet" : "Shuttle"} />
-              <Zeile
-                label="Fahrzeugklasse"
-                wert={vehicleClasses.find((vc) => vc.code === vehicleClassCode)?.name ?? "–"}
-              />
+          <div className="space-y-5">
+            <h2 className="font-serif text-xl font-semibold text-ink">Übersicht Ihrer Buchung</h2>
+            <dl className="space-y-0.5 text-sm">
+              <Zeile label="Produkt" wert={productCode === "VALET" ? "Valet – Hol & Bring" : "Shuttle – Selbstanfahrt"} />
+              <Zeile label="Fahrzeugklasse" wert={vehicleClasses.find((vc) => vc.code === vehicleClassCode)?.name ?? "–"} />
               <Zeile label="Anreise" wert={`${anreiseDatum} ${anreiseZeit} Uhr`} />
               <Zeile label="Abreise" wert={`${abreiseDatum} ${abreiseZeit} Uhr`} />
               <Zeile label="Tage" wert={String(quote.tage)} />
@@ -444,21 +395,24 @@ export default function BookingWizard() {
 
             <PreisAnzeige quote={quote} loading={quoteLoading} error={quoteError} ausfuehrlich />
 
-            {submitError && <p className="text-sm text-red-600">{submitError}</p>}
+            {submitError && <p className="text-sm text-[var(--danger)]">{submitError}</p>}
 
-            <div className="flex justify-between">
-              <button type="button" onClick={() => setStep(3)} className="text-sm font-medium text-zinc-600">
-                Zurück
+            <div className="flex items-center justify-between">
+              <button type="button" onClick={() => setStep(3)} className="text-sm font-medium text-muted transition-colors hover:text-ink">
+                ← Zurück
               </button>
               <button
                 type="button"
                 disabled={submitting || quoteLoading || !quote.verfuegbar}
                 onClick={handleSubmit}
-                className="rounded-full bg-blue-900 px-8 py-3 font-semibold text-white disabled:opacity-40"
+                className="btn-gold"
               >
                 {submitting ? "Wird verarbeitet…" : "Jetzt kostenpflichtig buchen"}
               </button>
             </div>
+            <p className="text-center text-xs text-subtle">
+              Sichere Zahlung über Stripe · Kostenlose Stornierung bis 48 Std. vor Anreise
+            </p>
           </div>
         )}
       </div>
@@ -466,13 +420,10 @@ export default function BookingWizard() {
   );
 }
 
-const inputCls =
-  "w-full rounded-md border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-800";
-
 function Feld({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-sm font-medium">{label}</span>
+      <span className="mb-1.5 block text-sm font-medium text-ink">{label}</span>
       {children}
     </label>
   );
@@ -480,9 +431,9 @@ function Feld({ label, children }: { label: string; children: React.ReactNode })
 
 function Zeile({ label, wert }: { label: string; wert: string }) {
   return (
-    <div className="flex justify-between border-b border-dashed border-zinc-200 py-1 dark:border-zinc-700">
-      <dt className="text-zinc-500">{label}</dt>
-      <dd className="font-medium">{wert}</dd>
+    <div className="flex justify-between gap-4 border-b border-line py-2">
+      <dt className="text-muted">{label}</dt>
+      <dd className="text-right font-medium text-ink">{wert}</dd>
     </div>
   );
 }
@@ -498,12 +449,12 @@ function PreisAnzeige({
   error: string | null;
   ausfuehrlich?: boolean;
 }) {
-  if (loading) return <p className="text-sm text-zinc-500">Preis wird berechnet…</p>;
-  if (error) return <p className="text-sm text-red-600">{error}</p>;
+  if (loading) return <p className="text-sm text-muted">Preis wird berechnet…</p>;
+  if (error) return <p className="text-sm text-[var(--danger)]">{error}</p>;
   if (!quote) return null;
   if (!quote.verfuegbar) {
     return (
-      <p className="text-sm text-red-600">
+      <p className="rounded-xl border border-[rgba(217,138,128,0.3)] bg-[rgba(217,138,128,0.08)] p-4 text-sm text-[var(--danger)]">
         Für den gewählten Zeitraum ist leider kein Kontingent mehr frei
         {quote.ausgebuchteTage.length > 0 ? ` (${quote.ausgebuchteTage.join(", ")})` : ""}. Bitte wählen
         Sie einen anderen Zeitraum.
@@ -511,33 +462,33 @@ function PreisAnzeige({
     );
   }
   return (
-    <div className="rounded-lg bg-zinc-50 p-4 text-sm dark:bg-zinc-800">
+    <div className="rounded-xl border border-line bg-surface-2 p-5 text-sm">
       {ausfuehrlich && (
         <>
-          <div className="flex justify-between">
+          <div className="flex justify-between text-muted">
             <span>Parkgebühr ({quote.tage} Tage)</span>
-            <span>{centZuEUR(quote.preisTageCent)}</span>
+            <span className="text-ink">{centZuEUR(quote.preisTageCent)}</span>
           </div>
           {quote.addonBreakdown.map((a) => (
-            <div key={a.code} className="flex justify-between text-zinc-500">
+            <div key={a.code} className="mt-1.5 flex justify-between text-muted">
               <span>{a.name}</span>
-              <span>{centZuEUR(a.preisCent)}</span>
+              <span className="text-ink">{centZuEUR(a.preisCent)}</span>
             </div>
           ))}
           {quote.gutscheinRabattCent > 0 && (
-            <div className="flex justify-between text-green-700 dark:text-green-400">
+            <div className="mt-1.5 flex justify-between text-[var(--success)]">
               <span>Gutschein</span>
               <span>-{centZuEUR(quote.gutscheinRabattCent)}</span>
             </div>
           )}
-          <hr className="my-2 border-zinc-300 dark:border-zinc-600" />
+          <hr className="my-3 border-line" />
         </>
       )}
-      <div className="flex justify-between text-base font-semibold">
-        <span>Gesamtpreis</span>
-        <span>{centZuEUR(quote.preisGesamtCent)}</span>
+      <div className="flex items-baseline justify-between">
+        <span className="text-ink">Gesamtpreis</span>
+        <span className="font-serif text-2xl font-semibold text-gold-gradient">{centZuEUR(quote.preisGesamtCent)}</span>
       </div>
-      <div className="mt-1 text-xs text-zinc-500">inkl. 19 % USt.</div>
+      <div className="mt-1 text-right text-xs text-subtle">inkl. 19 % USt.</div>
     </div>
   );
 }

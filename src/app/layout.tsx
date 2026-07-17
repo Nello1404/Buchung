@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Playfair_Display } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -7,15 +7,16 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
-  title: "FlySpot Valet – Parken am Flughafen Frankfurt",
+  title: "FlySpot Valet – Premium-Parken am Flughafen Frankfurt",
   description:
-    "Valet- und Shuttle-Parken am Flughafen Frankfurt. Einfach online buchen, Auto abgeben, entspannt fliegen.",
+    "Valet- und Shuttle-Parken am Flughafen Frankfurt. Ihr Auto in besten Händen – direkt am Terminal übergeben, entspannt in den Urlaub starten.",
 };
 
 export default function RootLayout({
@@ -24,10 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="de"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
+    <html lang="de" className={`${geistSans.variable} ${playfair.variable} h-full`}>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );
