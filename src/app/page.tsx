@@ -3,6 +3,10 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { Galerie } from "@/components/Galerie";
 
+// Startseite alle 5 Minuten neu generieren (Galerie-Bilder aus der DB), damit die
+// Seite statisch/schnell bleibt und die Datenbank nicht bei jedem Aufruf trifft.
+export const revalidate = 300;
+
 export default function Home() {
   return (
     <div className="flex flex-1 flex-col">
