@@ -11,7 +11,14 @@ import { KeinTarifError, SperrtagError } from "@/lib/pricing";
 import { prisma } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+// Basis-URL für Stripe Success-/Cancel-Weiterleitung: bevorzugt die ausdrücklich
+// gesetzte NEXT_PUBLIC_BASE_URL, sonst automatisch die Vercel-Produktions-URL,
+// sonst lokal. So funktioniert das Live-Deployment ohne manuelle URL-Konfiguration.
+const BASE_URL =
+  process.env.NEXT_PUBLIC_BASE_URL ||
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : "http://localhost:3000");
 const CHECKOUT_GUELTIGKEIT_MINUTEN = 30;
 
 export async function POST(request: Request) {
