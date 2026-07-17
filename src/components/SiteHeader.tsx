@@ -1,19 +1,8 @@
 import Link from "next/link";
+import { BrandLogo } from "@/components/BrandLogo";
 
 export function Wordmark({ className = "" }: { className?: string }) {
-  return (
-    <Link href="/" className={`group inline-flex items-center gap-2.5 ${className}`}>
-      <span className="flex h-9 w-9 items-center justify-center rounded-full gold-gradient">
-        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="#1a140a" strokeWidth="2">
-          <path d="M3 13l1.5-4.5A2 2 0 016.4 7h11.2a2 2 0 011.9 1.5L21 13" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M5 13h14v4a1 1 0 01-1 1h-1a1 1 0 01-1-1v-1H8v1a1 1 0 01-1 1H6a1 1 0 01-1-1v-4z" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </span>
-      <span className="font-serif text-lg font-semibold tracking-wide text-ink">
-        FlySpot <span className="text-gold-gradient">Valet</span>
-      </span>
-    </Link>
-  );
+  return <BrandLogo className={className} imgClassName="h-10 w-auto" />;
 }
 
 export function SiteHeader({ transparent = false }: { transparent?: boolean }) {
