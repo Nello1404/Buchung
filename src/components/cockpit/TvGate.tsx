@@ -32,7 +32,7 @@ export function TvGate() {
     <div className="flex min-h-screen items-center justify-center px-6">
       <form onSubmit={submit} className="card w-full max-w-sm space-y-4 p-8">
         <div className="flex flex-col items-center text-center">
-          <BrandLogo href={null} imgClassName="h-11 w-auto" />
+          <BrandLogo href={null} imgClassName="h-32 w-auto" />
           <p className="mt-2 text-sm text-muted">TV-Modus · Anzeige</p>
         </div>
         <input

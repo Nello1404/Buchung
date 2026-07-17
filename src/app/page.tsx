@@ -2,6 +2,7 @@ import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { Galerie } from "@/components/Galerie";
+import { BrandLogo } from "@/components/BrandLogo";
 
 // Startseite alle 5 Minuten neu generieren (Galerie-Bilder aus der DB), damit die
 // Seite statisch/schnell bleibt und die Datenbank nicht bei jedem Aufruf trifft.
@@ -14,7 +15,11 @@ export default function Home() {
 
       {/* Hero */}
       <section className="hero-bg relative overflow-hidden">
-        <div className="mx-auto max-w-6xl px-6 pb-24 pt-36 sm:pt-44">
+        {/* Echtes Logo groß als Erkennungsmerkmal (ab großen Bildschirmen) */}
+        <div className="pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 lg:block xl:right-10">
+          <BrandLogo href={null} imgClassName="h-[24rem] w-auto opacity-90 xl:h-[28rem]" />
+        </div>
+        <div className="relative mx-auto max-w-6xl px-6 pb-24 pt-36 sm:pt-44">
           <div className="max-w-2xl">
             <p className="eyebrow">Flughafen Frankfurt · Valet &amp; Shuttle</p>
             <h1 className="mt-5 font-serif text-4xl font-semibold leading-[1.1] text-ink sm:text-6xl">

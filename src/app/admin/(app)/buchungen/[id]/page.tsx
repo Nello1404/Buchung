@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { centZuEUR, formatDatumZeit } from "@/lib/format";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { ZahlungMarkieren } from "@/components/admin/ZahlungMarkieren";
+import { BuchungLoeschen } from "@/components/admin/BuchungLoeschen";
 
 const ZAHLUNGSART_LABEL: Record<string, string> = {
   BAR: "Bar",
@@ -76,6 +77,11 @@ export default async function BuchungDetail({ params }: { params: Promise<{ id: 
             <p className="text-sm text-muted">{b.notiz}</p>
           </Block>
         )}
+      </div>
+
+      <div className="mt-10 border-t border-line pt-5">
+        <p className="mb-2 text-xs text-subtle">Testdaten-Verwaltung – entfernt die Buchung endgültig und gibt das Kontingent frei.</p>
+        <BuchungLoeschen bookingId={b.id} bookingNumber={b.bookingNumber} />
       </div>
     </div>
   );

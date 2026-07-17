@@ -39,8 +39,8 @@ export default function AdminLoginPage() {
     <div className="flex min-h-screen flex-col items-center justify-center px-6">
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center text-center">
-          <BrandLogo href={null} imgClassName="h-14 w-auto" />
-          <p className="mt-3 text-sm text-muted">Admin-Bereich</p>
+          <BrandLogo href={null} imgClassName="h-40 w-auto" />
+          <p className="mt-2 text-sm text-muted">Admin-Bereich</p>
         </div>
         <form onSubmit={handleSubmit} className="card space-y-4 p-8">
           <label className="block">

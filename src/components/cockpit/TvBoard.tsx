@@ -34,7 +34,7 @@ export function TvBoard({ initial }: { initial: TvData }) {
   return (
     <div className="min-h-screen p-6 md:p-10">
       <div className="flex items-center justify-between">
-        <BrandLogo href={null} imgClassName="h-12 w-auto" />
+        <BrandLogo href={null} imgClassName="h-16 w-auto" />
         <span className="text-sm text-muted">{jetzt} Uhr</span>
       </div>
 

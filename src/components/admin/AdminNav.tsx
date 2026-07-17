@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BrandLogo } from "@/components/BrandLogo";
 
 const links = [
   { href: "/admin", label: "Dashboard" },
@@ -31,7 +30,14 @@ export function AdminNav({ email }: { email: string }) {
     <aside className="border-b border-line bg-surface md:w-64 md:border-b-0 md:border-r">
       <div className="flex flex-col gap-1 p-4 md:h-full">
         <div className="mb-4 px-2 pt-2">
-          <BrandLogo imgClassName="h-9 w-auto" />
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full border border-line-gold">
+              <span className="font-serif text-xs font-bold text-gold-gradient">FS</span>
+            </span>
+            <span className="font-serif text-lg font-semibold text-ink">
+              FlySpot <span className="text-gold-gradient">Valet</span>
+            </span>
+          </div>
           <p className="mt-1.5 text-xs text-subtle">Admin-Bereich</p>
         </div>
 

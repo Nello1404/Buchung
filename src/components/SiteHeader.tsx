@@ -1,8 +1,19 @@
 import Link from "next/link";
-import { BrandLogo } from "@/components/BrandLogo";
 
+// Kompakte, gut lesbare Wortmarke für kleine/dunkle Bereiche (Header, Footer,
+// Admin). Ein gold gerahmtes „FS“-Monogramm greift das Logo-Emblem auf; das
+// eigentliche Logo-Bild kommt großflächig auf Startseite, Login und TV zum Zug.
 export function Wordmark({ className = "" }: { className?: string }) {
-  return <BrandLogo className={className} imgClassName="h-10 w-auto" />;
+  return (
+    <Link href="/" className={`inline-flex items-center gap-2.5 ${className}`}>
+      <span className="flex h-9 w-9 items-center justify-center rounded-full border border-line-gold">
+        <span className="font-serif text-sm font-bold text-gold-gradient">FS</span>
+      </span>
+      <span className="font-serif text-lg font-semibold tracking-wide text-ink">
+        FlySpot <span className="text-gold-gradient">Valet</span>
+      </span>
+    </Link>
+  );
 }
 
 export function SiteHeader({ transparent = false }: { transparent?: boolean }) {
