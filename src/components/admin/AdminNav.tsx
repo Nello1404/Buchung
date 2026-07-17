@@ -5,7 +5,10 @@ import { usePathname, useRouter } from "next/navigation";
 
 const links = [
   { href: "/admin", label: "Dashboard" },
+  { href: "/admin/buchungen", label: "Buchungen" },
   { href: "/admin/tarife", label: "Preise & Tarife" },
+  { href: "/admin/kapazitaet", label: "Kapazität" },
+  { href: "/admin/gutscheine", label: "Gutscheine" },
 ];
 
 export function AdminNav({ email }: { email: string }) {
