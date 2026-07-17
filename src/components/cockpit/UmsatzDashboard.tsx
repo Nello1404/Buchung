@@ -30,6 +30,22 @@ export function UmsatzDashboard({ initial }: { initial: Umsatz }) {
   const [von, setVon] = useState("");
   const [bis, setBis] = useState("");
   const [loading, setLoading] = useState(false);
+  const [reportLaeuft, setReportLaeuft] = useState(false);
+
+  async function sendeReport() {
+    setReportLaeuft(true);
+    try {
+      const res = await fetch("/api/cron/wochenreport", { method: "POST" });
+      const d = await res.json().catch(() => ({}));
+      if (res.ok) {
+        alert(`Wochenreport (${d.zeitraum}) an ${d.an} gesendet.`);
+      } else {
+        alert(d.error ?? "Report konnte nicht gesendet werden.");
+      }
+    } finally {
+      setReportLaeuft(false);
+    }
+  }
 
   const laden = useCallback(async (p: Preset, v?: string, b?: string) => {
     setLoading(true);
@@ -81,6 +97,9 @@ export function UmsatzDashboard({ initial }: { initial: Umsatz }) {
           </div>
           <div className="flex gap-3">
             <Link href="/cockpit" className="btn-outline !px-4 !py-2 text-sm">← Cockpit</Link>
+            <button onClick={sendeReport} disabled={reportLaeuft} className="btn-outline !px-4 !py-2 text-sm">
+              {reportLaeuft ? "Sende…" : "Wochenreport senden"}
+            </button>
             <a href={csvUrl()} className="btn-gold !px-4 !py-2 text-sm">CSV-Export</a>
           </div>
         </div>
