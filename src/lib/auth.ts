@@ -3,9 +3,11 @@ import { cookies } from "next/headers";
 import { timingSafeEqual } from "node:crypto";
 
 export const AUTH_COOKIE = "flyspot_admin";
+export const TV_COOKIE = "flyspot_tv";
 const SESSION_STUNDEN = 12;
+const TV_STUNDEN = 720; // TV-Bildschirm bleibt lange angemeldet
 
-export type Rolle = "ADMIN" | "FAHRER";
+export type Rolle = "ADMIN" | "FAHRER" | "TV";
 
 export interface Session {
   email: string;
@@ -73,3 +75,30 @@ export async function getSession(): Promise<Session | null> {
 }
 
 export const SESSION_MAX_AGE = SESSION_STUNDEN * 60 * 60;
+export const TV_MAX_AGE = TV_STUNDEN * 60 * 60;
+
+/** Prüft das separate TV-Passwort (COCKPIT_TV_PASSWORD). */
+export function pruefeTvPasswort(passwort: string): boolean {
+  const tvPasswort = process.env.COCKPIT_TV_PASSWORD;
+  if (!tvPasswort) return false;
+  return sicherGleich(passwort, tvPasswort);
+}
+
+export async function erstelleTvToken(): Promise<string> {
+  return new SignJWT({ rolle: "TV" })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime(`${TV_STUNDEN}h`)
+    .sign(secretKey());
+}
+
+/** Zugang zum TV-Modus: gültige Admin-Session ODER gültiges TV-Cookie. */
+export async function hatTvZugang(): Promise<boolean> {
+  const admin = await getSession();
+  if (admin) return true;
+  const store = await cookies();
+  const token = store.get(TV_COOKIE)?.value;
+  if (!token) return false;
+  const s = await pruefeToken(token);
+  return s?.rolle === "TV";
+}
