@@ -8,6 +8,17 @@ const prisma = new PrismaClient({ adapter });
 const TAGE_IM_VORAUS = 365;
 
 async function main() {
+  // Auf Vercel läuft der Seed bei JEDEM Deploy. Mit SEED_ONLY_IF_EMPTY=1 wird nur
+  // eine wirklich leere Datenbank einmalig befüllt – so überschreiben spätere Deploys
+  // keine im Admin gepflegten Preise/Kapazitäten oder echte Buchungsdaten.
+  if (process.env.SEED_ONLY_IF_EMPTY === "1") {
+    const vorhanden = await prisma.product.count();
+    if (vorhanden > 0) {
+      console.log("Datenbank bereits initialisiert – Seed übersprungen.");
+      return;
+    }
+  }
+
   const valet = await prisma.product.upsert({
     where: { code: ProductCode.VALET },
     update: {},
