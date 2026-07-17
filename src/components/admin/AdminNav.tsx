@@ -8,6 +8,7 @@ const links = [
   { href: "/admin", label: "Dashboard" },
   { href: "/cockpit", label: "Betriebszentrale" },
   { href: "/admin/buchungen", label: "Buchungen" },
+  { href: "/admin/manuell", label: "Manuell buchen" },
   { href: "/admin/tarife", label: "Preise & Tarife" },
   { href: "/admin/saison", label: "Saison & Sperrtage" },
   { href: "/admin/kapazitaet", label: "Kapazität" },

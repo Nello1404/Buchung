@@ -3,6 +3,14 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { centZuEUR, formatDatumZeit } from "@/lib/format";
 import { StatusBadge } from "@/components/admin/StatusBadge";
+import { ZahlungMarkieren } from "@/components/admin/ZahlungMarkieren";
+
+const ZAHLUNGSART_LABEL: Record<string, string> = {
+  BAR: "Bar",
+  EC: "EC-/Kartenzahlung",
+  UEBERWEISUNG: "Überweisung",
+  RECHNUNG: "Auf Rechnung",
+};
 
 export default async function BuchungDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -43,8 +51,21 @@ export default async function BuchungDetail({ params }: { params: Promise<{ id: 
           {b.addons.map((a) => <Z key={a.id} l={a.nameSnapshot} w={centZuEUR(a.preisCentSnapshot)} />)}
           {b.gutscheinRabattCent > 0 && <Z l="Gutschein" w={`-${centZuEUR(b.gutscheinRabattCent)}`} />}
           <Z l="Gesamt" w={centZuEUR(b.preisGesamtCent)} gold />
-          {b.payment && <Z l="Erstattet" w={centZuEUR(b.payment.erstattetCent)} />}
+          {b.payment?.zahlungsart && <Z l="Zahlungsart" w={ZAHLUNGSART_LABEL[b.payment.zahlungsart] ?? b.payment.zahlungsart} />}
+          {b.payment && (
+            <Z l="Zahlungsstatus" w={b.payment.status === "BEZAHLT" ? "Bezahlt" : b.payment.status === "OFFEN" ? "Offen" : b.payment.status} />
+          )}
+          {b.payment && b.payment.erstattetCent > 0 && <Z l="Erstattet" w={centZuEUR(b.payment.erstattetCent)} />}
+          {b.payment && b.payment.status === "OFFEN" && b.status !== "STORNIERT" && (
+            <ZahlungMarkieren bookingId={b.id} />
+          )}
         </Block>
+
+        {b.notiz && (
+          <Block titel="Interne Notiz">
+            <p className="text-sm text-muted">{b.notiz}</p>
+          </Block>
+        )}
       </div>
     </div>
   );
