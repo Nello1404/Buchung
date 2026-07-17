@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { quoteSchema } from "@/lib/booking-schema";
-import { berechneAngebot, ProduktNichtGefundenError } from "@/lib/booking";
+import { berechneAngebot, FahrzeugklasseNichtGefundenError, ProduktNichtGefundenError } from "@/lib/booking";
 import { KeinTarifError, SperrtagError } from "@/lib/pricing";
 
 export async function POST(request: Request) {
@@ -30,7 +30,11 @@ export async function POST(request: Request) {
     if (error instanceof KeinTarifError) {
       return NextResponse.json({ error: error.message, code: "KEIN_TARIF" }, { status: 422 });
     }
-    if (error instanceof ProduktNichtGefundenError || error instanceof RangeError) {
+    if (
+      error instanceof ProduktNichtGefundenError ||
+      error instanceof FahrzeugklasseNichtGefundenError ||
+      error instanceof RangeError
+    ) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
     console.error(error);

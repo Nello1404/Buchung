@@ -6,6 +6,7 @@ import type { QuoteInput } from "@/lib/booking-schema";
 import { ProductCode } from "@/generated/prisma/client";
 
 export class ProduktNichtGefundenError extends Error {}
+export class FahrzeugklasseNichtGefundenError extends Error {}
 export class GutscheinUngueltigError extends Error {}
 
 export async function ladeProdukt(productCode: "VALET" | "SHUTTLE") {
@@ -14,6 +15,16 @@ export async function ladeProdukt(productCode: "VALET" | "SHUTTLE") {
   });
   if (!product) throw new ProduktNichtGefundenError(`Produkt ${productCode} nicht gefunden.`);
   return product;
+}
+
+export async function ladeFahrzeugklasse(vehicleClassCode: string) {
+  const vehicleClass = await prisma.vehicleClass.findFirst({
+    where: { code: vehicleClassCode, active: true },
+  });
+  if (!vehicleClass) {
+    throw new FahrzeugklasseNichtGefundenError(`Fahrzeugklasse ${vehicleClassCode} nicht gefunden.`);
+  }
+  return vehicleClass;
 }
 
 export interface VoucherPruefung {
@@ -43,6 +54,7 @@ export async function pruefeGutschein(
 
 export async function berechneAngebot(input: QuoteInput) {
   const product = await ladeProdukt(input.productCode);
+  const vehicleClass = await ladeFahrzeugklasse(input.vehicleClassCode);
   const anreise = berlinZeitpunkt(input.anreiseDatum, input.anreiseZeit);
   const abreise = berlinZeitpunkt(input.abreiseDatum, input.abreiseZeit);
 
@@ -52,20 +64,30 @@ export async function berechneAngebot(input: QuoteInput) {
 
   const tage = belegteTage(anreise, abreise);
 
-  const [tariffRules, seasonRates, blockedDaysGlobal, blockedDaysProdukt, addonRows, verfuegbarkeit, voucher] =
+  const [tariffRules, seasonRates, blockedDaysGlobal, blockedDaysProdukt, addonPreise, verfuegbarkeit, voucher] =
     await Promise.all([
-      prisma.tariffRule.findMany({ where: { productId: product.id } }),
-      prisma.seasonRate.findMany({ where: { productId: product.id } }),
+      prisma.tariffRule.findMany({ where: { productId: product.id, vehicleClassId: vehicleClass.id } }),
+      prisma.seasonRate.findMany({ where: { productId: product.id, vehicleClassId: vehicleClass.id } }),
       prisma.blockedDay.findMany({ where: { productId: null, date: { in: tage } } }),
       prisma.blockedDay.findMany({ where: { productId: product.id, date: { in: tage } } }),
       input.addonCodes.length
-        ? prisma.serviceAddon.findMany({ where: { code: { in: input.addonCodes }, active: true } })
+        ? prisma.serviceAddonPrice.findMany({
+            where: {
+              vehicleClassId: vehicleClass.id,
+              serviceAddon: { code: { in: input.addonCodes }, active: true },
+            },
+            include: { serviceAddon: true },
+          })
         : Promise.resolve([]),
       verfuegbareTage(product.id, tage),
       pruefeGutschein(input.voucherCode, input.customerEmail),
     ]);
 
-  const addons: AddonInput[] = addonRows.map((a) => ({ code: a.code, name: a.name, preisCent: a.preisCent }));
+  const addons: AddonInput[] = addonPreise.map((a) => ({
+    code: a.serviceAddon.code,
+    name: a.serviceAddon.name,
+    preisCent: a.preisCent,
+  }));
 
   const preis = berechnePreis({
     anreise,
@@ -79,6 +101,7 @@ export async function berechneAngebot(input: QuoteInput) {
 
   return {
     product,
+    vehicleClass,
     anreise,
     abreise,
     tage,
@@ -86,7 +109,12 @@ export async function berechneAngebot(input: QuoteInput) {
     verfuegbar: verfuegbarkeit.verfuegbar,
     ausgebuchteTage: verfuegbarkeit.ausgebuchteTage,
     voucher,
-    addonRows,
+    addonRows: addonPreise.map((a) => ({
+      id: a.serviceAddonId,
+      code: a.serviceAddon.code,
+      name: a.serviceAddon.name,
+      preisCent: a.preisCent,
+    })),
   };
 }
 

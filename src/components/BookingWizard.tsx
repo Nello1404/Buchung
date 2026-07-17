@@ -9,7 +9,12 @@ interface Addon {
   code: string;
   name: string;
   description: string | null;
-  preisCent: number;
+  preisCent: number | null;
+}
+
+interface VehicleClass {
+  code: string;
+  name: string;
 }
 
 interface QuoteResponse {
@@ -37,6 +42,8 @@ export default function BookingWizard() {
   const [step, setStep] = useState(1);
 
   const [productCode, setProductCode] = useState<ProductCode>("VALET");
+  const [vehicleClasses, setVehicleClasses] = useState<VehicleClass[]>([]);
+  const [vehicleClassCode, setVehicleClassCode] = useState("");
   const [anreiseDatum, setAnreiseDatum] = useState(inTagen(3));
   const [anreiseZeit, setAnreiseZeit] = useState("14:00");
   const [abreiseDatum, setAbreiseDatum] = useState(inTagen(6));
@@ -63,15 +70,30 @@ export default function BookingWizard() {
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/service-addons")
+    fetch("/api/vehicle-classes")
+      .then((r) => r.json())
+      .then((d) => {
+        const classes: VehicleClass[] = d.vehicleClasses ?? [];
+        setVehicleClasses(classes);
+        if (classes.length && !vehicleClassCode) setVehicleClassCode(classes[0].code);
+      })
+      .catch(() => setVehicleClasses([]));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Zusatzservice-Preise hängen von der Fahrzeugklasse ab → bei Klassenwechsel neu laden.
+  useEffect(() => {
+    if (!vehicleClassCode) return;
+    fetch(`/api/service-addons?vehicleClass=${encodeURIComponent(vehicleClassCode)}`)
       .then((r) => r.json())
       .then((d) => setAddonsList(d.addons ?? []))
       .catch(() => setAddonsList([]));
-  }, []);
+  }, [vehicleClassCode]);
 
   const quotePayload = useMemo(
     () => ({
       productCode,
+      vehicleClassCode,
       anreiseDatum,
       anreiseZeit,
       abreiseDatum,
@@ -80,11 +102,11 @@ export default function BookingWizard() {
       voucherCode: voucherCode.trim() || undefined,
       customerEmail: email.trim() || undefined,
     }),
-    [productCode, anreiseDatum, anreiseZeit, abreiseDatum, abreiseZeit, addonCodes, voucherCode, email]
+    [productCode, vehicleClassCode, anreiseDatum, anreiseZeit, abreiseDatum, abreiseZeit, addonCodes, voucherCode, email]
   );
 
   useEffect(() => {
-    if (!anreiseDatum || !abreiseDatum) return;
+    if (!anreiseDatum || !abreiseDatum || !vehicleClassCode) return;
     const controller = new AbortController();
     const timeout = setTimeout(async () => {
       setQuoteLoading(true);
@@ -114,14 +136,14 @@ export default function BookingWizard() {
       controller.abort();
       clearTimeout(timeout);
     };
-  }, [quotePayload, anreiseDatum, abreiseDatum]);
+  }, [quotePayload, anreiseDatum, abreiseDatum, vehicleClassCode]);
 
   function toggleAddon(code: string) {
     setAddonCodes((prev) => (prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]));
   }
 
   const schritt1Gueltig =
-    !!anreiseDatum && !!abreiseDatum && !quoteLoading && !quoteError && !!quote?.verfuegbar;
+    !!anreiseDatum && !!abreiseDatum && !!vehicleClassCode && !quoteLoading && !quoteError && !!quote?.verfuegbar;
 
   const schritt3Gueltig =
     name.trim().length > 1 &&
@@ -204,6 +226,30 @@ export default function BookingWizard() {
               </div>
             </div>
 
+            <div>
+              <span className="mb-2 block text-sm font-medium">Fahrzeugklasse</span>
+              <p className="mb-2 text-xs text-zinc-500">
+                Der Preis richtet sich nach der Fahrzeuggröße. Bei abweichender Fahrzeuggröße
+                behalten wir uns eine Anpassung bei der Übergabe vor.
+              </p>
+              <div className="grid grid-cols-3 gap-3">
+                {vehicleClasses.map((vc) => (
+                  <button
+                    key={vc.code}
+                    type="button"
+                    onClick={() => setVehicleClassCode(vc.code)}
+                    className={`rounded-lg border p-3 text-center text-sm transition-colors ${
+                      vehicleClassCode === vc.code
+                        ? "border-blue-900 bg-blue-50 dark:bg-blue-950"
+                        : "border-zinc-200 dark:border-zinc-700"
+                    }`}
+                  >
+                    {vc.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="mb-1 block text-sm font-medium">Anreise (Abgabe)</label>
@@ -274,7 +320,8 @@ export default function BookingWizard() {
                   />
                   <div>
                     <div className="font-medium">
-                      {addon.name} – {centZuEUR(addon.preisCent)}
+                      {addon.name}
+                      {addon.preisCent != null ? ` – ${centZuEUR(addon.preisCent)}` : ""}
                     </div>
                     {addon.description && (
                       <div className="text-xs text-zinc-500">{addon.description}</div>
@@ -384,6 +431,10 @@ export default function BookingWizard() {
             <h2 className="text-lg font-semibold">Zusammenfassung</h2>
             <dl className="space-y-1 text-sm">
               <Zeile label="Produkt" wert={productCode === "VALET" ? "Valet" : "Shuttle"} />
+              <Zeile
+                label="Fahrzeugklasse"
+                wert={vehicleClasses.find((vc) => vc.code === vehicleClassCode)?.name ?? "–"}
+              />
               <Zeile label="Anreise" wert={`${anreiseDatum} ${anreiseZeit} Uhr`} />
               <Zeile label="Abreise" wert={`${abreiseDatum} ${abreiseZeit} Uhr`} />
               <Zeile label="Tage" wert={String(quote.tage)} />

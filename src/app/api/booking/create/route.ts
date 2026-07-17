@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { createBookingSchema } from "@/lib/booking-schema";
-import { berechneAngebot, generiereBuchungsnummer, ProduktNichtGefundenError } from "@/lib/booking";
+import {
+  berechneAngebot,
+  FahrzeugklasseNichtGefundenError,
+  generiereBuchungsnummer,
+  ProduktNichtGefundenError,
+} from "@/lib/booking";
 import { KapazitaetError, reserviereKapazitaet, gibKapazitaetFrei } from "@/lib/capacity";
 import { KeinTarifError, SperrtagError } from "@/lib/pricing";
 import { prisma } from "@/lib/prisma";
@@ -27,7 +32,11 @@ export async function POST(request: Request) {
     if (error instanceof KeinTarifError) {
       return NextResponse.json({ error: error.message, code: "KEIN_TARIF" }, { status: 422 });
     }
-    if (error instanceof ProduktNichtGefundenError || error instanceof RangeError) {
+    if (
+      error instanceof ProduktNichtGefundenError ||
+      error instanceof FahrzeugklasseNichtGefundenError ||
+      error instanceof RangeError
+    ) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
     console.error(error);
@@ -106,6 +115,8 @@ export async function POST(request: Request) {
               marke: input.fahrzeug.marke,
               farbe: input.fahrzeug.farbe,
               auffaelligkeiten: input.fahrzeug.auffaelligkeiten,
+              vehicleClassId: angebot.vehicleClass.id,
+              vehicleClassNameSnapshot: angebot.vehicleClass.name,
             },
           },
           addons: angebot.addonRows.length

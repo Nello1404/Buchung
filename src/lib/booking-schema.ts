@@ -5,6 +5,7 @@ const zeitRegex = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 export const quoteSchema = z.object({
   productCode: z.enum(["VALET", "SHUTTLE"]),
+  vehicleClassCode: z.string().trim().min(1, "Bitte eine Fahrzeugklasse wählen."),
   anreiseDatum: z.string().regex(datumRegex, "Bitte ein gültiges Anreisedatum wählen."),
   anreiseZeit: z.string().regex(zeitRegex, "Bitte eine gültige Anreisezeit wählen."),
   abreiseDatum: z.string().regex(datumRegex, "Bitte ein gültiges Abreisedatum wählen."),

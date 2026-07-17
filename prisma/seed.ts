@@ -20,81 +20,166 @@ async function main() {
     create: { code: ProductCode.SHUTTLE, name: "Shuttle (Selbstanfahrt)" },
   });
 
+  // Fahrzeugklassen (frei im Admin erweiterbar). Jede Klasse hat eine eigene,
+  // unabhängige Preistabelle für Parkgebühr und Zusatzservices.
+  const kleinwagen = await prisma.vehicleClass.upsert({
+    where: { code: "KLEINWAGEN" },
+    update: {},
+    create: { code: "KLEINWAGEN", name: "Kleinwagen", sortOrder: 1 },
+  });
+  const mittelklasse = await prisma.vehicleClass.upsert({
+    where: { code: "MITTELKLASSE" },
+    update: {},
+    create: { code: "MITTELKLASSE", name: "Mittelklasse", sortOrder: 2 },
+  });
+  const suvVan = await prisma.vehicleClass.upsert({
+    where: { code: "SUV_VAN" },
+    update: {},
+    create: { code: "SUV_VAN", name: "SUV & Van", sortOrder: 3 },
+  });
+
   // Beispiel-Tarife (Platzhalter – im Admin änderbar). Preise in Cent.
+  // Je Fahrzeugklasse eine eigenständige Preistabelle (kein automatischer Aufschlag).
   await prisma.tariffRule.deleteMany({});
   await prisma.tariffRule.createMany({
     data: [
-      { productId: valet.id, minTage: 1, maxTage: 3, preisProTagCent: 4500 },
-      { productId: valet.id, minTage: 4, maxTage: 7, preisProTagCent: 3900 },
-      { productId: valet.id, minTage: 8, maxTage: 14, preisProTagCent: 3300 },
-      { productId: valet.id, minTage: 15, maxTage: null, preisProTagCent: 2700 },
+      // Valet – Kleinwagen
+      { productId: valet.id, vehicleClassId: kleinwagen.id, minTage: 1, maxTage: 3, preisProTagCent: 4500 },
+      { productId: valet.id, vehicleClassId: kleinwagen.id, minTage: 4, maxTage: 7, preisProTagCent: 3900 },
+      { productId: valet.id, vehicleClassId: kleinwagen.id, minTage: 8, maxTage: 14, preisProTagCent: 3300 },
+      { productId: valet.id, vehicleClassId: kleinwagen.id, minTage: 15, maxTage: null, preisProTagCent: 2700 },
+      // Valet – Mittelklasse
+      { productId: valet.id, vehicleClassId: mittelklasse.id, minTage: 1, maxTage: 3, preisProTagCent: 5200 },
+      { productId: valet.id, vehicleClassId: mittelklasse.id, minTage: 4, maxTage: 7, preisProTagCent: 4500 },
+      { productId: valet.id, vehicleClassId: mittelklasse.id, minTage: 8, maxTage: 14, preisProTagCent: 3800 },
+      { productId: valet.id, vehicleClassId: mittelklasse.id, minTage: 15, maxTage: null, preisProTagCent: 3100 },
+      // Valet – SUV & Van
+      { productId: valet.id, vehicleClassId: suvVan.id, minTage: 1, maxTage: 3, preisProTagCent: 5900 },
+      { productId: valet.id, vehicleClassId: suvVan.id, minTage: 4, maxTage: 7, preisProTagCent: 5100 },
+      { productId: valet.id, vehicleClassId: suvVan.id, minTage: 8, maxTage: 14, preisProTagCent: 4300 },
+      { productId: valet.id, vehicleClassId: suvVan.id, minTage: 15, maxTage: null, preisProTagCent: 3500 },
 
-      { productId: shuttle.id, minTage: 1, maxTage: 3, preisProTagCent: 2100 },
-      { productId: shuttle.id, minTage: 4, maxTage: 7, preisProTagCent: 1800 },
-      { productId: shuttle.id, minTage: 8, maxTage: 14, preisProTagCent: 1500 },
-      { productId: shuttle.id, minTage: 15, maxTage: null, preisProTagCent: 1200 },
+      // Shuttle – Kleinwagen
+      { productId: shuttle.id, vehicleClassId: kleinwagen.id, minTage: 1, maxTage: 3, preisProTagCent: 2100 },
+      { productId: shuttle.id, vehicleClassId: kleinwagen.id, minTage: 4, maxTage: 7, preisProTagCent: 1800 },
+      { productId: shuttle.id, vehicleClassId: kleinwagen.id, minTage: 8, maxTage: 14, preisProTagCent: 1500 },
+      { productId: shuttle.id, vehicleClassId: kleinwagen.id, minTage: 15, maxTage: null, preisProTagCent: 1200 },
+      // Shuttle – Mittelklasse
+      { productId: shuttle.id, vehicleClassId: mittelklasse.id, minTage: 1, maxTage: 3, preisProTagCent: 2400 },
+      { productId: shuttle.id, vehicleClassId: mittelklasse.id, minTage: 4, maxTage: 7, preisProTagCent: 2100 },
+      { productId: shuttle.id, vehicleClassId: mittelklasse.id, minTage: 8, maxTage: 14, preisProTagCent: 1700 },
+      { productId: shuttle.id, vehicleClassId: mittelklasse.id, minTage: 15, maxTage: null, preisProTagCent: 1400 },
+      // Shuttle – SUV & Van
+      { productId: shuttle.id, vehicleClassId: suvVan.id, minTage: 1, maxTage: 3, preisProTagCent: 2700 },
+      { productId: shuttle.id, vehicleClassId: suvVan.id, minTage: 4, maxTage: 7, preisProTagCent: 2300 },
+      { productId: shuttle.id, vehicleClassId: suvVan.id, minTage: 8, maxTage: 14, preisProTagCent: 2000 },
+      { productId: shuttle.id, vehicleClassId: suvVan.id, minTage: 15, maxTage: null, preisProTagCent: 1600 },
     ],
   });
 
-  // Beispiel-Saisonzeitraum (Sommerferien Hessen 2026) mit eigenem Tagespreis.
+  // Beispiel-Saisonzeitraum (Sommerferien Hessen 2026) mit eigenem Tagespreis je Klasse.
   await prisma.seasonRate.deleteMany({});
   await prisma.seasonRate.createMany({
     data: [
       {
         productId: valet.id,
+        vehicleClassId: kleinwagen.id,
         name: "Sommerferien Hessen 2026",
         startDate: new Date("2026-06-27"),
         endDate: new Date("2026-08-04"),
         preisProTagCent: 5500,
       },
       {
+        productId: valet.id,
+        vehicleClassId: mittelklasse.id,
+        name: "Sommerferien Hessen 2026",
+        startDate: new Date("2026-06-27"),
+        endDate: new Date("2026-08-04"),
+        preisProTagCent: 6300,
+      },
+      {
+        productId: valet.id,
+        vehicleClassId: suvVan.id,
+        name: "Sommerferien Hessen 2026",
+        startDate: new Date("2026-06-27"),
+        endDate: new Date("2026-08-04"),
+        preisProTagCent: 7100,
+      },
+      {
         productId: shuttle.id,
+        vehicleClassId: kleinwagen.id,
         name: "Sommerferien Hessen 2026",
         startDate: new Date("2026-06-27"),
         endDate: new Date("2026-08-04"),
         preisProTagCent: 2700,
       },
+      {
+        productId: shuttle.id,
+        vehicleClassId: mittelklasse.id,
+        name: "Sommerferien Hessen 2026",
+        startDate: new Date("2026-06-27"),
+        endDate: new Date("2026-08-04"),
+        preisProTagCent: 3100,
+      },
+      {
+        productId: shuttle.id,
+        vehicleClassId: suvVan.id,
+        name: "Sommerferien Hessen 2026",
+        startDate: new Date("2026-06-27"),
+        endDate: new Date("2026-08-04"),
+        preisProTagCent: 3500,
+      },
     ],
   });
 
-  await prisma.serviceAddon.upsert({
-    where: { code: "kleine-aufbereitung" },
-    update: {},
-    create: {
+  // Zusatzservices: Katalogeintrag (Name/Beschreibung) + Preis je Fahrzeugklasse.
+  // Aufbereitung skaliert mit der Fahrzeuggröße (mehr Fläche/Aufwand), Tank-/
+  // Ladeservice ist eine reine Servicegebühr unabhängig von der Fahrzeuggröße.
+  const addons = [
+    {
       code: "kleine-aufbereitung",
       name: "Kleine Aufbereitung (Wäsche + Innenraum)",
-      preisCent: 3900,
+      description: null as string | null,
+      preise: { kleinwagen: 3900, mittelklasse: 4500, suvVan: 5200 },
     },
-  });
-  await prisma.serviceAddon.upsert({
-    where: { code: "grosse-aufbereitung" },
-    update: {},
-    create: {
+    {
       code: "grosse-aufbereitung",
       name: "Große Aufbereitung (inkl. Politur)",
-      preisCent: 8900,
+      description: null,
+      preise: { kleinwagen: 8900, mittelklasse: 9900, suvVan: 11900 },
     },
-  });
-  await prisma.serviceAddon.upsert({
-    where: { code: "tankservice" },
-    update: {},
-    create: {
+    {
       code: "tankservice",
       name: "Tankservice (Verbrenner)",
       description: "Servicegebühr – der Kraftstoff wird separat vor Ort abgerechnet.",
-      preisCent: 900,
+      preise: { kleinwagen: 900, mittelklasse: 900, suvVan: 900 },
     },
-  });
-  await prisma.serviceAddon.upsert({
-    where: { code: "ladeservice" },
-    update: {},
-    create: {
+    {
       code: "ladeservice",
       name: "E-Ladeservice",
       description: "Servicegebühr – der Ladestrom wird separat vor Ort abgerechnet.",
-      preisCent: 1200,
+      preise: { kleinwagen: 1200, mittelklasse: 1200, suvVan: 1200 },
     },
-  });
+  ];
+
+  for (const addon of addons) {
+    const saved = await prisma.serviceAddon.upsert({
+      where: { code: addon.code },
+      update: { name: addon.name, description: addon.description },
+      create: { code: addon.code, name: addon.name, description: addon.description },
+    });
+    for (const [klasse, preisCent] of [
+      [kleinwagen, addon.preise.kleinwagen],
+      [mittelklasse, addon.preise.mittelklasse],
+      [suvVan, addon.preise.suvVan],
+    ] as const) {
+      await prisma.serviceAddonPrice.upsert({
+        where: { serviceAddonId_vehicleClassId: { serviceAddonId: saved.id, vehicleClassId: klasse.id } },
+        update: { preisCent },
+        create: { serviceAddonId: saved.id, vehicleClassId: klasse.id, preisCent },
+      });
+    }
+  }
 
   // Kapazität für die nächsten 365 Tage anlegen (Standardkontingente).
   const today = new Date();
