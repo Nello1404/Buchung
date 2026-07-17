@@ -282,6 +282,14 @@ function AusgabeErfassen({ kategorien, onGespeichert }: { kategorien: { id: stri
     }
   }
 
+  if (kategorien.length === 0) {
+    return (
+      <div className="card p-5 text-sm text-muted">
+        Bitte zuerst rechts unter <span className="text-gold">&bdquo;Kategorie hinzufügen&ldquo;</span> mindestens eine Kategorie anlegen, dann können Sie Ausgaben erfassen.
+      </div>
+    );
+  }
+
   return (
     <form onSubmit={speichern} className="card flex flex-wrap items-end gap-3 p-5">
       <label className="block">
