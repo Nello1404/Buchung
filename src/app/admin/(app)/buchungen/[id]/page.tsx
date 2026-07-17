@@ -16,16 +16,26 @@ export default async function BuchungDetail({ params }: { params: Promise<{ id: 
   const { id } = await params;
   const b = await prisma.booking.findUnique({
     where: { id },
-    include: { customer: true, vehicle: true, product: true, addons: true, payment: true },
+    include: {
+      customer: true,
+      vehicle: true,
+      product: true,
+      addons: true,
+      payment: true,
+      _count: { select: { protokolle: true } },
+    },
   });
   if (!b) notFound();
 
   return (
     <div className="max-w-2xl">
       <Link href="/admin/buchungen" className="text-sm text-muted hover:text-ink">← Zurück zur Liste</Link>
-      <div className="mt-4 flex items-center gap-3">
+      <div className="mt-4 flex flex-wrap items-center gap-3">
         <h1 className="font-serif text-2xl font-semibold text-ink">{b.bookingNumber}</h1>
         <StatusBadge status={b.status} />
+        <Link href={`/admin/buchungen/${b.id}/protokoll`} className="btn-outline !px-4 !py-1.5 text-sm">
+          Übergabeprotokoll{b._count.protokolle > 0 ? ` (${b._count.protokolle})` : ""}
+        </Link>
       </div>
 
       <div className="mt-6 grid gap-6 sm:grid-cols-2">

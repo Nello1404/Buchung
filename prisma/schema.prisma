@@ -24,6 +24,13 @@ enum ImageCategory {
   AUFBEREITUNG
 }
 
+/// Zeitpunkt eines Übergabeprotokolls: Fahrzeug-Übernahme (Einfahrt) oder
+/// Rückgabe an den Kunden (Ausfahrt).
+enum HandoverPhase {
+  EINFAHRT
+  AUSFAHRT
+}
+
 enum BookingStatus {
   ANGEFRAGT
   BEZAHLT
@@ -289,6 +296,7 @@ model Booking {
   payment         Payment?
   addons          BookingAddon[]
   voucherRedemption Voucher?    @relation("VoucherRedemption")
+  protokolle      HandoverProtocol[]
 
   @@index([customerId])
   @@index([productId, anreise, abreise])
@@ -396,6 +404,40 @@ model SiteImage {
   createdAt DateTime      @default(now())
 
   @@index([kategorie, active, sortOrder])
+}
+
+/// Übergabeprotokoll: dokumentiert Fahrzeug-Übernahme/-Rückgabe durch den Fahrer
+/// (Kilometer-/Tankstand, Bemerkungen, Fotos, Kundenunterschrift).
+model HandoverProtocol {
+  id               String        @id @default(cuid())
+  bookingId        String
+  booking          Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  phase            HandoverPhase
+  fahrer           String
+  kmStand          Int?
+  tankstand        String?
+  bemerkung        String?
+  /// Kundenunterschrift als Bild (Vercel Blob). Optional, falls kein Blob-Store.
+  unterschriftUrl  String?
+  unterschriftPfad String?
+  erstelltVon      String
+  createdAt        DateTime      @default(now())
+
+  fotos            HandoverPhoto[]
+
+  @@index([bookingId])
+}
+
+/// Einzelnes Foto zu einem Übergabeprotokoll (in Vercel Blob gespeichert).
+model HandoverPhoto {
+  id         String           @id @default(cuid())
+  protocolId String
+  protocol   HandoverProtocol @relation(fields: [protocolId], references: [id], onDelete: Cascade)
+  url        String
+  pathname   String
+  createdAt  DateTime         @default(now())
+
+  @@index([protocolId])
 }
 
 /// Audit-Log für Änderungen an Finanzdaten (wer, wann, was).
