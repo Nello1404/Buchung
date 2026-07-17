@@ -271,5 +271,69 @@ model Settings {
   stornoFristStunden     Int    @default(48)
   stornoErstattungFrueh  Int    @default(100)
   stornoErstattungSpaet  Int    @default(50)
+  /// Empfohlener Steuer-Rücklagensatz in % vom Monatsergebnis (Gewinn).
+  steuerRuecklageProzent Int    @default(25)
   updatedAt              DateTime @updatedAt
+}
+
+// ---- Betriebszentrale Phase 3: Einnahmen/Ausgaben (leichtgewichtig) ----
+
+/// Ausgaben-Kategorie, im Admin pflegbar (umbenennen/ergänzen/deaktivieren).
+model ExpenseCategory {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  sortOrder Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  expenses  Expense[]
+  recurring RecurringExpense[]
+}
+
+/// Einzelne Ausgabe (Brutto inkl. USt). Von der Geschäftsführung erfasst.
+model Expense {
+  id          String          @id @default(cuid())
+  datum       DateTime        @db.Date
+  betragCent  Int
+  categoryId  String
+  category    ExpenseCategory @relation(fields: [categoryId], references: [id])
+  notiz       String?
+  erfasstVon  String
+  /// Verknüpfung, falls automatisch aus einer wiederkehrenden Ausgabe erzeugt.
+  recurringId String?
+  recurring   RecurringExpense? @relation(fields: [recurringId], references: [id], onDelete: SetNull)
+  /// Monat (YYYY-MM) bei wiederkehrenden Ausgaben – verhindert Duplikate.
+  periodeKey  String?
+  createdAt   DateTime        @default(now())
+
+  @@unique([recurringId, periodeKey])
+  @@index([datum])
+  @@index([categoryId])
+}
+
+/// Wiederkehrende Ausgabe (z. B. Miete monatlich). Wird automatisch materialisiert.
+model RecurringExpense {
+  id         String          @id @default(cuid())
+  name       String
+  betragCent Int
+  categoryId String
+  category   ExpenseCategory @relation(fields: [categoryId], references: [id])
+  startDatum DateTime        @db.Date
+  aktiv      Boolean         @default(true)
+  createdAt  DateTime        @default(now())
+
+  expenses   Expense[]
+}
+
+/// Audit-Log für Änderungen an Finanzdaten (wer, wann, was).
+model AuditLog {
+  id        String   @id @default(cuid())
+  email     String
+  aktion    String
+  entity    String
+  entityId  String?
+  details   Json?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
 }

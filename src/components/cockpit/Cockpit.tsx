@@ -89,6 +89,7 @@ export function Cockpit({ initial }: { initial: CockpitData }) {
           </div>
           <div className="flex gap-3 text-sm">
             <Link href="/cockpit/umsatz" className="btn-outline !px-4 !py-2 text-sm">Umsatz</Link>
+            <Link href="/cockpit/finanzen" className="btn-outline !px-4 !py-2 text-sm">Finanzen</Link>
             <Link href="/admin" className="btn-outline !px-4 !py-2 text-sm">Admin</Link>
             <Link href="/cockpit/tv" className="btn-outline !px-4 !py-2 text-sm" target="_blank">TV-Modus</Link>
           </div>

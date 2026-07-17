@@ -220,8 +220,27 @@ async function main() {
       stornoFristStunden: 48,
       stornoErstattungFrueh: 100,
       stornoErstattungSpaet: 50,
+      steuerRuecklageProzent: 25,
     },
   });
+
+  // Ausgaben-Kategorien (im Admin pflegbar).
+  const kategorien = [
+    "Miete",
+    "Personal",
+    "Sprit / Tanken",
+    "Versicherung",
+    "Marketing",
+    "Partner-Aufbereitung",
+    "Sonstiges",
+  ];
+  for (let i = 0; i < kategorien.length; i++) {
+    await prisma.expenseCategory.upsert({
+      where: { name: kategorien[i] },
+      update: {},
+      create: { name: kategorien[i], sortOrder: i + 1 },
+    });
+  }
 
   // Demo-Kunde + Gutschein zum lokalen Testen der Gutschein-Einlösung.
   const demoCustomer = await prisma.customer.upsert({
