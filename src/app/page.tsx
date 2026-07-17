@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { Galerie } from "@/components/Galerie";
 
 export default function Home() {
   return (
@@ -158,6 +159,9 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      {/* Bildergalerie (nur sichtbar, wenn Bilder gepflegt sind) */}
+      <Galerie />
 
       {/* FAQ */}
       <section className="mx-auto w-full max-w-3xl px-6 py-24">

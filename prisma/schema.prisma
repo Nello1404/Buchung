@@ -16,6 +16,14 @@ enum ProductCode {
   SHUTTLE
 }
 
+/// Kategorien für die Bildergalerie auf der Webseite.
+enum ImageCategory {
+  STELLPLATZ
+  TEAM
+  FLOTTE
+  AUFBEREITUNG
+}
+
 enum BookingStatus {
   ANGEFRAGT
   BEZAHLT
@@ -366,6 +374,22 @@ model ContentPage {
   titel     String
   inhalt    String   @default("")
   updatedAt DateTime @updatedAt
+}
+
+/// Über den Admin gepflegte Bilder (Stellplatz/Team/Flotte/Aufbereitung),
+/// gespeichert in Vercel Blob. `url` = öffentliche Blob-URL, `pathname` wird
+/// zum Löschen aus dem Blob-Store benötigt.
+model SiteImage {
+  id        String        @id @default(cuid())
+  kategorie ImageCategory
+  url       String
+  pathname  String
+  alt       String        @default("")
+  sortOrder Int           @default(0)
+  active    Boolean       @default(true)
+  createdAt DateTime      @default(now())
+
+  @@index([kategorie, active, sortOrder])
 }
 
 /// Audit-Log für Änderungen an Finanzdaten (wer, wann, was).
