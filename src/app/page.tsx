@@ -2,7 +2,9 @@ import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { Galerie } from "@/components/Galerie";
+import { Bewertungen } from "@/components/Bewertungen";
 import { BrandLogo } from "@/components/BrandLogo";
+import { ScrollReveal } from "@/components/ScrollReveal";
 
 // Startseite alle 5 Minuten neu generieren (Galerie-Bilder aus der DB), damit die
 // Seite statisch/schnell bleibt und die Datenbank nicht bei jedem Aufruf trifft.
@@ -11,6 +13,7 @@ export const revalidate = 300;
 export default function Home() {
   return (
     <div className="flex flex-1 flex-col">
+      <ScrollReveal />
       <SiteHeader transparent />
 
       {/* Hero */}
@@ -21,16 +24,16 @@ export default function Home() {
         </div>
         <div className="relative mx-auto max-w-6xl px-6 pb-24 pt-36 sm:pt-44">
           <div className="max-w-2xl">
-            <p className="eyebrow">Flughafen Frankfurt · Valet &amp; Shuttle</p>
+            <p className="eyebrow hero-rise hero-rise-1">Flughafen Frankfurt · Valet &amp; Shuttle</p>
             <h1 className="mt-5 font-serif text-4xl font-semibold leading-[1.1] text-ink sm:text-6xl">
-              Ihr Auto in besten Händen,<br />
-              <span className="text-gold-gradient">Sie schon in Gedanken im Urlaub.</span>
+              <span className="hero-rise hero-rise-2 block">Ihr Auto in besten Händen,</span>
+              <span className="hero-rise hero-rise-3 block text-gold-gradient">Sie schon in Gedanken im Urlaub.</span>
             </h1>
-            <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted">
+            <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted hero-rise hero-rise-4">
               Übergeben Sie Ihr Fahrzeug direkt am Terminal – wir parken es sicher und stellen es
               bei Ihrer Rückkehr pünktlich bereit. Kein Suchen, kein Stress, kein Zeitverlust.
             </p>
-            <div className="mt-9 flex flex-wrap items-center gap-4">
+            <div className="mt-9 flex flex-wrap items-center gap-4 hero-rise hero-rise-5">
               <Link href="/buchen" className="btn-gold">
                 Parkplatz buchen
                 <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
@@ -41,7 +44,7 @@ export default function Home() {
             </div>
 
             {/* Vertrauens-Signale */}
-            <div className="mt-12 flex flex-wrap gap-x-8 gap-y-4">
+            <div className="mt-12 flex flex-wrap gap-x-8 gap-y-4 hero-rise hero-rise-5">
               {[
                 { icon: shieldIcon, text: "Vollständig versichert" },
                 { icon: terminalIcon, text: "Direkt am Terminal" },
@@ -59,7 +62,7 @@ export default function Home() {
 
       {/* So funktioniert's */}
       <section id="ablauf" className="mx-auto w-full max-w-6xl px-6 py-24">
-        <div className="mx-auto max-w-2xl text-center">
+        <div className="mx-auto max-w-2xl text-center" data-reveal>
           <p className="eyebrow">In drei Schritten</p>
           <h2 className="mt-4 font-serif text-3xl font-semibold text-ink sm:text-4xl">
             So einfach parken Sie bei uns
@@ -82,8 +85,8 @@ export default function Home() {
               titel: "Entspannt zurückkehren",
               text: "Bei Ihrer Ankunft steht das Auto bereit – gewaschen und getankt, wenn Sie möchten.",
             },
-          ].map((step) => (
-            <div key={step.nr} className="card p-8">
+          ].map((step, i) => (
+            <div key={step.nr} className="card lift p-8" data-reveal data-delay={String(i + 1)}>
               <div className="font-serif text-4xl font-semibold text-gold-gradient">{step.nr}</div>
               <h3 className="mt-4 text-lg font-medium text-ink">{step.titel}</h3>
               <p className="mt-2 text-sm leading-relaxed text-muted">{step.text}</p>
@@ -96,7 +99,7 @@ export default function Home() {
 
       {/* Produktvergleich */}
       <section id="preise" className="mx-auto w-full max-w-6xl px-6 py-24">
-        <div className="mx-auto max-w-2xl text-center">
+        <div className="mx-auto max-w-2xl text-center" data-reveal>
           <p className="eyebrow">Zwei Wege, ein Ziel</p>
           <h2 className="mt-4 font-serif text-3xl font-semibold text-ink sm:text-4xl">
             Wählen Sie Ihren Komfort
@@ -104,7 +107,7 @@ export default function Home() {
         </div>
         <div className="mt-14 grid gap-8 md:grid-cols-2">
           {/* Valet */}
-          <div className="card relative overflow-hidden p-8">
+          <div className="card lift relative overflow-hidden p-8" data-reveal data-delay="1">
             <span className="absolute right-6 top-6 rounded-full border border-line-gold px-3 py-1 text-xs font-medium text-gold">
               Premium
             </span>
@@ -125,7 +128,7 @@ export default function Home() {
           </div>
 
           {/* Shuttle */}
-          <div className="card p-8">
+          <div className="card lift p-8" data-reveal data-delay="2">
             <span className="text-gold">{vanIcon}</span>
             <h3 className="mt-4 font-serif text-2xl font-semibold text-ink">Shuttle – Selbstanfahrt</h3>
             <p className="mt-3 text-sm leading-relaxed text-muted">
@@ -157,8 +160,8 @@ export default function Home() {
             { icon: sparkleIcon, titel: "Aufbereitung & Service", text: "Auf Wunsch Wäsche, Innenreinigung, Politur oder Tank-/Ladeservice." },
             { icon: clockIcon, titel: "Pünktlich bereit", text: "Wir behalten Ihre Flugzeiten im Blick – Ihr Auto wartet, wenn Sie landen." },
             { icon: euroIcon, titel: "Faire, klare Preise", text: "Transparent nach Dauer und Fahrzeugklasse. Keine versteckten Kosten." },
-          ].map((v) => (
-            <div key={v.titel}>
+          ].map((v, i) => (
+            <div key={v.titel} data-reveal data-delay={String((i % 3) + 1)}>
               <span className="flex h-11 w-11 items-center justify-center rounded-full border border-line-gold text-gold">
                 {v.icon}
               </span>
@@ -172,13 +175,16 @@ export default function Home() {
       {/* Bildergalerie (nur sichtbar, wenn Bilder gepflegt sind) */}
       <Galerie />
 
+      {/* Kundenstimmen / Google-Bewertungen */}
+      <Bewertungen />
+
       {/* FAQ */}
       <section className="mx-auto w-full max-w-3xl px-6 py-24">
-        <div className="text-center">
+        <div className="text-center" data-reveal>
           <p className="eyebrow">Gut zu wissen</p>
           <h2 className="mt-4 font-serif text-3xl font-semibold text-ink sm:text-4xl">Häufige Fragen</h2>
         </div>
-        <div className="mt-12 divide-y divide-line">
+        <div className="mt-12 divide-y divide-line" data-reveal>
           {[
             { q: "Wo übergebe ich mein Auto?", a: "Beim Valet-Service direkt am Terminal zur gebuchten Zeit. Beim Shuttle parken Sie auf unserem Platz und werden zum Terminal gefahren. Die genauen Infos erhalten Sie in Ihrer Buchungsbestätigung." },
             { q: "Was passiert, wenn sich mein Flug verspätet?", a: "Kein Problem – wir richten uns nach Ihrer tatsächlichen Ankunft. Ihr Fahrzeug steht bereit, sobald Sie zurück sind." },
@@ -202,7 +208,7 @@ export default function Home() {
 
       {/* Abschluss-CTA */}
       <section className="mx-auto w-full max-w-6xl px-6 pb-24">
-        <div className="card hero-bg overflow-hidden px-8 py-14 text-center">
+        <div className="card hero-bg overflow-hidden px-8 py-14 text-center" data-reveal>
           <h2 className="mx-auto max-w-2xl font-serif text-3xl font-semibold text-ink sm:text-4xl">
             Bereit für einen entspannten Start in die Reise?
           </h2>
