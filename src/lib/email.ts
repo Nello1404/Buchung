@@ -11,15 +11,28 @@ function getResend(): Resend | undefined {
 
 const EMAIL_FROM = process.env.EMAIL_FROM || "FlySpot Valet <buchung@flyspot-valet.de>";
 
-async function sende(an: string, betreff: string, html: string) {
+interface Anhang {
+  filename: string;
+  content: Buffer;
+}
+
+async function sende(an: string, betreff: string, html: string, anhaenge?: Anhang[]) {
   const resend = getResend();
   if (!resend) {
     console.log(
-      `[E-Mail nicht gesendet – RESEND_API_KEY fehlt] An: ${an} | Betreff: ${betreff}\n${html}`
+      `[E-Mail nicht gesendet – RESEND_API_KEY fehlt] An: ${an} | Betreff: ${betreff}` +
+        (anhaenge?.length ? ` | Anhänge: ${anhaenge.map((a) => a.filename).join(", ")}` : "") +
+        `\n${html}`
     );
     return;
   }
-  await resend.emails.send({ from: EMAIL_FROM, to: an, subject: betreff, html });
+  await resend.emails.send({
+    from: EMAIL_FROM,
+    to: an,
+    subject: betreff,
+    html,
+    attachments: anhaenge?.map((a) => ({ filename: a.filename, content: a.content })),
+  });
 }
 
 const formatEUR = new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" });
@@ -155,4 +168,40 @@ export async function sendeWochenreport(params: {
   `);
 
   await sende(params.an, `Wochenreport ${von} – ${bis} · FlySpot Valet`, html);
+}
+
+/** Übergabeprotokoll als PDF an das Team senden. */
+export async function sendeUebergabeprotokoll(params: {
+  an: string;
+  bookingNumber: string;
+  phaseLabel: string;
+  kennzeichen: string;
+  kundeName: string;
+  fahrer: string;
+  kmStand: number | null;
+  tankstand: string | null;
+  erstelltAm: Date;
+  pdf: Buffer;
+}) {
+  const html = baseLayout(`
+    <h2 style="font-size: 17px; margin: 0 0 4px;">Übergabeprotokoll – ${params.phaseLabel}</h2>
+    <p style="color:#666; margin-top:0;">Erfasst am ${formatDatum.format(params.erstelltAm)} Uhr.</p>
+    <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+      ${zeile("Buchung", params.bookingNumber, true)}
+      ${zeile("Kennzeichen", params.kennzeichen)}
+      ${zeile("Kunde", params.kundeName)}
+      ${zeile("Fahrer", params.fahrer)}
+      ${zeile("Kilometerstand", params.kmStand != null ? `${params.kmStand.toLocaleString("de-DE")} km` : "–")}
+      ${zeile("Tank-/Ladestand", params.tankstand ?? "–")}
+    </table>
+    <p style="font-size:13px;color:#666;">Das vollständige Protokoll inkl. Fotos und Unterschrift findest du im PDF-Anhang.</p>
+  `);
+
+  const datei = `Uebergabeprotokoll_${params.bookingNumber}_${params.phaseLabel.replace(/[^a-zA-Z]/g, "")}.pdf`;
+  await sende(
+    params.an,
+    `Übergabeprotokoll ${params.bookingNumber} (${params.phaseLabel}) – ${params.kennzeichen}`,
+    html,
+    [{ filename: datei, content: params.pdf }]
+  );
 }

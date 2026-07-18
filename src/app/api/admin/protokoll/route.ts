@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { prisma } from "@/lib/prisma";
 import { ladeBildHoch, blobKonfiguriert } from "@/lib/blob";
-import { istPhase } from "@/lib/handover";
+import { istPhase, phaseLabel } from "@/lib/handover";
+import { erzeugeProtokollPdf } from "@/lib/handover-pdf";
+import { sendeUebergabeprotokoll } from "@/lib/email";
 
 const ERLAUBTE_TYPEN = ["image/jpeg", "image/png", "image/webp", "image/avif"];
 const MAX_BYTES = 8 * 1024 * 1024;
@@ -80,6 +82,57 @@ export async function POST(request: Request) {
     },
     include: { fotos: true },
   });
+
+  // PDF erzeugen und per E-Mail ans Team schicken – nicht blockierend: ein Fehler
+  // hier darf das bereits gespeicherte Protokoll nicht scheitern lassen.
+  try {
+    const voll = await prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: { customer: true, product: true, vehicle: true },
+    });
+    if (voll) {
+      const pdfBytes = await erzeugeProtokollPdf({
+        bookingNumber: voll.bookingNumber,
+        phase: protokoll.phase,
+        erstelltAm: protokoll.createdAt,
+        erstelltVon: protokoll.erstelltVon,
+        fahrer: protokoll.fahrer,
+        kmStand: protokoll.kmStand,
+        tankstand: protokoll.tankstand,
+        bemerkung: protokoll.bemerkung,
+        kunde: { name: voll.customer.name, email: voll.customer.email, telefon: voll.customer.phone },
+        fahrzeug: {
+          kennzeichen: voll.vehicle?.kennzeichen ?? "–",
+          klasse: voll.vehicle?.vehicleClassNameSnapshot ?? null,
+          marke: voll.vehicle?.marke ?? null,
+          farbe: voll.vehicle?.farbe ?? null,
+          auffaelligkeiten: voll.vehicle?.auffaelligkeiten ?? null,
+        },
+        produktName: voll.product.name,
+        anreise: voll.anreise,
+        abreise: voll.abreise,
+        flugnummer: voll.flugnummer,
+        fotoUrls: protokoll.fotos.map((f) => f.url),
+        unterschriftUrl: protokoll.unterschriftUrl,
+      });
+
+      const an = process.env.PROTOKOLL_EMAIL || process.env.REPORT_EMAIL || "service@flyspot-valet.de";
+      await sendeUebergabeprotokoll({
+        an,
+        bookingNumber: voll.bookingNumber,
+        phaseLabel: phaseLabel(protokoll.phase),
+        kennzeichen: voll.vehicle?.kennzeichen ?? "–",
+        kundeName: voll.customer.name,
+        fahrer: protokoll.fahrer,
+        kmStand: protokoll.kmStand,
+        tankstand: protokoll.tankstand,
+        erstelltAm: protokoll.createdAt,
+        pdf: Buffer.from(pdfBytes),
+      });
+    }
+  } catch (error) {
+    console.error("Protokoll-PDF/E-Mail fehlgeschlagen (Protokoll wurde trotzdem gespeichert):", error);
+  }
 
   return NextResponse.json({ protokoll, blobKonfiguriert: blobOk });
 }
