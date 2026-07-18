@@ -157,7 +157,7 @@ export async function POST(request: Request) {
         anreise: booking.anreise,
         abreise: booking.abreise,
         preisGesamtCent: booking.preisGesamtCent,
-        flugnummer: booking.flugnummer,
+        flugnummer: booking.rueckflugnummer,
       });
     }
 

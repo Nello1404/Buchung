@@ -56,8 +56,8 @@ export default async function BuchungDetail({ params }: { params: Promise<{ id: 
           <Z l="Produkt" w={b.product.name} />
           <Z l="Anreise" w={`${formatDatumZeit.format(b.anreise)} Uhr`} />
           <Z l="Abreise" w={`${formatDatumZeit.format(b.abreise)} Uhr`} />
-          <Z l="Flug Hinreise" w={b.flugnummer ?? "–"} />
-          <Z l="Flug Rückreise" w={b.rueckflugnummer ?? "–"} />
+          <Z l="Flugnummer (Rückflug)" w={b.rueckflugnummer ?? "–"} />
+          {b.flugnummer && <Z l="Flug Hinreise (alt)" w={b.flugnummer} />}
           <div className="flex items-center justify-between gap-4 py-1">
             <dt className="text-muted">Ankunft (live)</dt>
             <dd><FlugStatusBadge bookingId={b.id} /></dd>

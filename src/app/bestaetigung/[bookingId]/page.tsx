@@ -57,7 +57,7 @@ export default async function BestaetigungPage({
               <Zeile label="Produkt" wert={booking.product.name} />
               <Zeile label="Anreise" wert={`${formatDatumZeit.format(booking.anreise)} Uhr`} />
               <Zeile label="Abreise" wert={`${formatDatumZeit.format(booking.abreise)} Uhr`} />
-              {booking.flugnummer && <Zeile label="Flugnummer" wert={booking.flugnummer} />}
+              {booking.rueckflugnummer && <Zeile label="Flugnummer (Rückflug)" wert={booking.rueckflugnummer} />}
               {booking.vehicle && <Zeile label="Kennzeichen" wert={booking.vehicle.kennzeichen} />}
               {booking.addons.map((a) => (
                 <Zeile key={a.id} label={a.nameSnapshot} wert={centZuEUR(a.preisCentSnapshot)} />

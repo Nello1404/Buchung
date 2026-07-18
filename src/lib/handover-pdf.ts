@@ -133,7 +133,7 @@ export async function erzeugeProtokollPdf(d: ProtokollPdfDaten): Promise<Uint8Ar
   feld("Produkt", d.produktName);
   feld("Anreise", `${fmtDatumZeit.format(d.anreise)} Uhr`);
   feld("Abreise", `${fmtDatumZeit.format(d.abreise)} Uhr`);
-  feld("Flugnummer", d.flugnummer ?? "–");
+  feld("Flugnummer (Rückflug)", d.flugnummer ?? "–");
 
   y -= 8;
   abschnitt("Übergabe");
