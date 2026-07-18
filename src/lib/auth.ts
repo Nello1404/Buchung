@@ -36,15 +36,25 @@ function sicherGleich(a: string, b: string): boolean {
  * Vercel-Umgebungsvariable vor (nie im Code oder in der Datenbank).
  */
 export function pruefeLogin(email: string, passwort: string): Session | null {
+  const eMail = email.trim().toLowerCase();
+
   const adminEmail = process.env.ADMIN_EMAIL;
   const adminPasswort = process.env.ADMIN_PASSWORD;
-  if (!adminEmail || !adminPasswort) return null;
-
-  const emailOk = sicherGleich(email.trim().toLowerCase(), adminEmail.trim().toLowerCase());
-  const passOk = sicherGleich(passwort, adminPasswort);
-  if (emailOk && passOk) {
-    return { email: adminEmail.trim().toLowerCase(), rolle: "ADMIN" };
+  if (adminEmail && adminPasswort) {
+    if (sicherGleich(eMail, adminEmail.trim().toLowerCase()) && sicherGleich(passwort, adminPasswort)) {
+      return { email: adminEmail.trim().toLowerCase(), rolle: "ADMIN" };
+    }
   }
+
+  // Fahrer-Login (eingeschränkte Rolle) – eigenes Passwort, feste Kennung.
+  const fahrerEmail = (process.env.FAHRER_EMAIL || "fahrer@flyspot-valet.de").trim().toLowerCase();
+  const fahrerPasswort = process.env.FAHRER_PASSWORD;
+  if (fahrerPasswort) {
+    if (sicherGleich(eMail, fahrerEmail) && sicherGleich(passwort, fahrerPasswort)) {
+      return { email: fahrerEmail, rolle: "FAHRER" };
+    }
+  }
+
   return null;
 }
 

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/admin-guard";
+import { requireStaff } from "@/lib/admin-guard";
 import { prisma } from "@/lib/prisma";
 import { ladeBildHoch, blobKonfiguriert } from "@/lib/blob";
 import { istPhase, phaseLabel } from "@/lib/handover";
@@ -10,7 +10,7 @@ const ERLAUBTE_TYPEN = ["image/jpeg", "image/png", "image/webp", "image/avif"];
 const MAX_BYTES = 8 * 1024 * 1024;
 
 export async function POST(request: Request) {
-  const guard = await requireAdmin();
+  const guard = await requireStaff();
   if ("response" in guard) return guard.response;
 
   const form = await request.formData().catch(() => null);

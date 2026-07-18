@@ -269,7 +269,11 @@ model Booking {
 
   anreise         DateTime
   abreise         DateTime
+  /// Hinflug (Abflug am Anreisetag) – vom Kunden bei der Buchung angegeben.
   flugnummer      String?
+  /// Rückflug (Ankunft in Frankfurt am Abreisetag) – Grundlage fürs Live-
+  /// Flugtracking, damit der Fahrer weiß, wann das Fahrzeug bereitstehen muss.
+  rueckflugnummer String?
 
   preisTageCent      Int
   preisAddonsCent    Int         @default(0)
@@ -438,6 +442,27 @@ model HandoverPhoto {
   createdAt  DateTime         @default(now())
 
   @@index([protocolId])
+}
+
+/// Zwischenspeicher für Flug-Statusabfragen (AeroDataBox). Pro Flugnummer + Tag
+/// ein Eintrag – so teilen sich mehrere Buchungen desselben Fluges eine Abfrage
+/// und das API-Kontingent wird geschont.
+model FlightStatus {
+  id               String    @id @default(cuid())
+  flightNumber     String
+  /// Ankunftsdatum in Frankfurt (YYYY-MM-DD, Europe/Berlin).
+  datum            String
+  /// Roh-Status von AeroDataBox (z. B. "Arrived", "Expected", "EnRoute").
+  status           String?
+  scheduledArrival DateTime?
+  estimatedArrival DateTime?
+  actualArrival    DateTime?
+  arrivalAirport   String?
+  /// true, wenn die Abfrage keinen passenden Flug lieferte.
+  nichtGefunden    Boolean   @default(false)
+  fetchedAt        DateTime  @default(now())
+
+  @@unique([flightNumber, datum])
 }
 
 /// Audit-Log für Änderungen an Finanzdaten (wer, wann, was).

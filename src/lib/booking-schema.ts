@@ -19,6 +19,7 @@ export const quoteSchema = z.object({
 export const createBookingSchema = quoteSchema
   .extend({
     flugnummer: z.string().trim().min(1).optional(),
+    rueckflugnummer: z.string().trim().min(1).optional(),
     kunde: z.object({
       name: z.string().trim().min(2, "Bitte Vor- und Nachnamen angeben."),
       email: z.string().trim().email("Bitte eine gültige E-Mail-Adresse angeben."),

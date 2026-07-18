@@ -8,7 +8,7 @@ export default async function AdminAppLayout({ children }: { children: React.Rea
 
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
-      <AdminNav email={session.email} />
+      <AdminNav email={session.email} rolle={session.rolle} />
       <main className="flex-1 px-6 py-10 md:px-10">{children}</main>
     </div>
   );

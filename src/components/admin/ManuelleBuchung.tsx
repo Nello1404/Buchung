@@ -48,6 +48,7 @@ export function ManuelleBuchung() {
   const [farbe, setFarbe] = useState("");
   const [auffaelligkeiten, setAuffaelligkeiten] = useState("");
   const [flugnummer, setFlugnummer] = useState("");
+  const [rueckflugnummer, setRueckflugnummer] = useState("");
   const [zahlungsart, setZahlungsart] = useState<Zahlungsart>("BAR");
   const [notiz, setNotiz] = useState("");
 
@@ -144,6 +145,7 @@ export function ManuelleBuchung() {
           addonCodes,
           voucherCode: voucherCode.trim() || undefined,
           flugnummer: flugnummer.trim() || undefined,
+          rueckflugnummer: rueckflugnummer.trim() || undefined,
           zahlungsart,
           notiz: notiz.trim() || undefined,
           kunde: { name: name.trim(), email: email.trim(), telefon: telefon.trim() || undefined },
@@ -273,8 +275,12 @@ export function ManuelleBuchung() {
               <input className="field" value={farbe} onChange={(e) => setFarbe(e.target.value)} />
             </label>
             <label className="block">
-              <span className="mb-1.5 block text-sm font-medium text-ink">Flugnummer {productCode === "VALET" ? "*" : "(optional)"}</span>
+              <span className="mb-1.5 block text-sm font-medium text-ink">Flugnummer Hinflug {productCode === "VALET" ? "*" : "(optional)"}</span>
               <input className="field" value={flugnummer} onChange={(e) => setFlugnummer(e.target.value)} />
+            </label>
+            <label className="block">
+              <span className="mb-1.5 block text-sm font-medium text-ink">Flugnummer Rückflug (optional)</span>
+              <input className="field" value={rueckflugnummer} onChange={(e) => setRueckflugnummer(e.target.value)} placeholder="für Landungs-Tracking" />
             </label>
             <label className="block sm:col-span-2">
               <span className="mb-1.5 block text-sm font-medium text-ink">Auffälligkeiten</span>

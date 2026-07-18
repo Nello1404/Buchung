@@ -5,6 +5,7 @@ import { centZuEUR, formatDatumZeit } from "@/lib/format";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { ZahlungMarkieren } from "@/components/admin/ZahlungMarkieren";
 import { BuchungLoeschen } from "@/components/admin/BuchungLoeschen";
+import { FlugStatusBadge } from "@/components/FlugStatusBadge";
 
 const ZAHLUNGSART_LABEL: Record<string, string> = {
   BAR: "Bar",
@@ -55,7 +56,12 @@ export default async function BuchungDetail({ params }: { params: Promise<{ id: 
           <Z l="Produkt" w={b.product.name} />
           <Z l="Anreise" w={`${formatDatumZeit.format(b.anreise)} Uhr`} />
           <Z l="Abreise" w={`${formatDatumZeit.format(b.abreise)} Uhr`} />
-          <Z l="Flugnummer" w={b.flugnummer ?? "–"} />
+          <Z l="Flug Hinreise" w={b.flugnummer ?? "–"} />
+          <Z l="Flug Rückreise" w={b.rueckflugnummer ?? "–"} />
+          <div className="flex items-center justify-between gap-4 py-1">
+            <dt className="text-muted">Ankunft (live)</dt>
+            <dd><FlugStatusBadge bookingId={b.id} /></dd>
+          </div>
         </Block>
         <Block titel="Zahlung">
           <Z l="Parkgebühr" w={centZuEUR(b.preisTageCent)} />

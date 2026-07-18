@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
-const links = [
+const alleLinks = [
   { href: "/admin", label: "Dashboard" },
   { href: "/cockpit", label: "Betriebszentrale" },
   { href: "/admin/buchungen", label: "Buchungen" },
@@ -16,9 +16,13 @@ const links = [
   { href: "/admin/inhalte", label: "Rechtstexte" },
 ];
 
-export function AdminNav({ email }: { email: string }) {
+// Fahrer sehen nur die Buchungen (dort auch das Übergabeprotokoll).
+const fahrerLinks = [{ href: "/admin/buchungen", label: "Buchungen" }];
+
+export function AdminNav({ email, rolle }: { email: string; rolle?: string }) {
   const pathname = usePathname();
   const router = useRouter();
+  const links = rolle === "FAHRER" ? fahrerLinks : alleLinks;
 
   async function logout() {
     await fetch("/api/admin/logout", { method: "POST" });
@@ -38,7 +42,7 @@ export function AdminNav({ email }: { email: string }) {
               FlySpot <span className="text-gold-gradient">Valet</span>
             </span>
           </div>
-          <p className="mt-1.5 text-xs text-subtle">Admin-Bereich</p>
+          <p className="mt-1.5 text-xs text-subtle">{rolle === "FAHRER" ? "Fahrer-Bereich" : "Admin-Bereich"}</p>
         </div>
 
         <nav className="flex flex-1 flex-col gap-1">
