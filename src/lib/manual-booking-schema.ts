@@ -9,6 +9,7 @@ export type Zahlungsart = (typeof ZAHLUNGSARTEN)[number];
 export const manuelleBuchungSchema = quoteSchema
   .extend({
     flugnummer: z.string().trim().min(1).optional(),
+    rueckflugnummer: z.string().trim().min(1).optional(),
     zahlungsart: z.enum(ZAHLUNGSARTEN),
     notiz: z.string().trim().max(500).optional(),
     kunde: z.object({

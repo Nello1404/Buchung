@@ -60,6 +60,7 @@ export default function BookingWizard() {
   const [farbe, setFarbe] = useState("");
   const [auffaelligkeiten, setAuffaelligkeiten] = useState("");
   const [flugnummer, setFlugnummer] = useState("");
+  const [rueckflugnummer, setRueckflugnummer] = useState("");
   const [voucherCode, setVoucherCode] = useState("");
 
   const [quote, setQuote] = useState<QuoteResponse | null>(null);
@@ -161,6 +162,7 @@ export default function BookingWizard() {
         body: JSON.stringify({
           ...quotePayload,
           flugnummer: flugnummer.trim() || undefined,
+          rueckflugnummer: rueckflugnummer.trim() || undefined,
           kunde: { name: name.trim(), email: email.trim(), telefon: telefon.trim() || undefined },
           fahrzeug: {
             kennzeichen: kennzeichen.trim(),
@@ -343,8 +345,11 @@ export default function BookingWizard() {
               <Feld label="Telefon (optional)">
                 <input value={telefon} onChange={(e) => setTelefon(e.target.value)} className="field" />
               </Feld>
-              <Feld label={`Flugnummer${productCode === "VALET" ? " *" : " (optional)"}`}>
+              <Feld label={`Flugnummer Hinflug${productCode === "VALET" ? " *" : " (optional)"}`}>
                 <input value={flugnummer} onChange={(e) => setFlugnummer(e.target.value)} className="field" placeholder="z. B. LH123" />
+              </Feld>
+              <Feld label="Flugnummer Rückflug (optional)">
+                <input value={rueckflugnummer} onChange={(e) => setRueckflugnummer(e.target.value)} className="field" placeholder="z. B. LH124" />
               </Feld>
               <Feld label="Kennzeichen">
                 <input value={kennzeichen} onChange={(e) => setKennzeichen(e.target.value)} className="field" placeholder="z. B. F-AB 1234" />

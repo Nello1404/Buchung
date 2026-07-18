@@ -108,6 +108,7 @@ export async function POST(request: Request) {
           anreise: angebot.anreise,
           abreise: angebot.abreise,
           flugnummer: input.flugnummer,
+          rueckflugnummer: input.rueckflugnummer,
           preisTageCent: angebot.preis.preisTageCent,
           preisAddonsCent: angebot.preis.preisAddonsCent,
           gutscheinRabattCent: angebot.preis.gutscheinRabattCent,

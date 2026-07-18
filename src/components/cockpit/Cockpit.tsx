@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { centZuEUR } from "@/lib/format";
 import type { getCockpitData, getTagDetail } from "@/lib/cockpit";
+import { FlugStatusBadge } from "@/components/FlugStatusBadge";
 
 type CockpitData = Awaited<ReturnType<typeof getCockpitData>>;
 type TagDetail = Awaited<ReturnType<typeof getTagDetail>>;
@@ -291,6 +292,9 @@ function DetailListe({
                 {e.flugnummer ? ` · ✈ ${e.flugnummer}` : ""}
               </div>
               {e.addons.length > 0 && <div className="mt-0.5 text-xs text-subtle">{e.addons.join(", ")}</div>}
+              {aktion === "abholung" && (
+                <div className="mt-1"><FlugStatusBadge bookingId={e.id} /></div>
+              )}
               <div className="mt-2 flex flex-wrap items-center gap-3">
                 {erledigt(e.status) ? (
                   <span className="text-xs text-[var(--success)]">✓ erledigt</span>
