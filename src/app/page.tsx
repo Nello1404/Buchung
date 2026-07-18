@@ -2,6 +2,7 @@ import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { Galerie } from "@/components/Galerie";
+import { Bewertungen } from "@/components/Bewertungen";
 import { BrandLogo } from "@/components/BrandLogo";
 import { ScrollReveal } from "@/components/ScrollReveal";
 
@@ -173,6 +174,9 @@ export default function Home() {
 
       {/* Bildergalerie (nur sichtbar, wenn Bilder gepflegt sind) */}
       <Galerie />
+
+      {/* Kundenstimmen / Google-Bewertungen */}
+      <Bewertungen />
 
       {/* FAQ */}
       <section className="mx-auto w-full max-w-3xl px-6 py-24">
