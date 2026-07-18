@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { RechtsVorlage } from "@/components/RechtsVorlage";
 import { CONTENT_SEITEN, type ContentSlug } from "@/lib/content-pages";
 
 export async function RechtsSeite({ slug }: { slug: ContentSlug }) {
@@ -16,10 +17,7 @@ export async function RechtsSeite({ slug }: { slug: ContentSlug }) {
         {page && page.inhalt.trim() ? (
           <div className="mt-6 whitespace-pre-line leading-relaxed text-muted">{page.inhalt}</div>
         ) : (
-          <p className="mt-6 text-muted">
-            Diese Inhalte werden derzeit erstellt. Bei Fragen erreichen Sie uns unter{" "}
-            <a href="mailto:info@flyspot-valet.de" className="text-gold hover:underline">info@flyspot-valet.de</a>.
-          </p>
+          <RechtsVorlage slug={slug} />
         )}
         <Link href="/" className="mt-10 inline-block text-sm font-medium text-muted transition-colors hover:text-ink">
           ← Zur Startseite
