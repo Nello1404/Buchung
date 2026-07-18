@@ -223,3 +223,9 @@ html {
     border-color: var(--border-gold);
   }
 }
+
+/* Lightbox-Einblendung (nur mit erlaubter Bewegung via motion-safe:) */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
