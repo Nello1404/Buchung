@@ -59,7 +59,6 @@ export default function BookingWizard() {
   const [marke, setMarke] = useState("");
   const [farbe, setFarbe] = useState("");
   const [auffaelligkeiten, setAuffaelligkeiten] = useState("");
-  const [flugnummer, setFlugnummer] = useState("");
   const [rueckflugnummer, setRueckflugnummer] = useState("");
   const [voucherCode, setVoucherCode] = useState("");
 
@@ -150,7 +149,7 @@ export default function BookingWizard() {
     name.trim().length > 1 &&
     /\S+@\S+\.\S+/.test(email) &&
     kennzeichen.trim().length > 1 &&
-    (productCode !== "VALET" || flugnummer.trim().length > 0);
+    (productCode !== "VALET" || rueckflugnummer.trim().length > 0);
 
   async function handleSubmit() {
     setSubmitting(true);
@@ -161,7 +160,6 @@ export default function BookingWizard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...quotePayload,
-          flugnummer: flugnummer.trim() || undefined,
           rueckflugnummer: rueckflugnummer.trim() || undefined,
           kunde: { name: name.trim(), email: email.trim(), telefon: telefon.trim() || undefined },
           fahrzeug: {
@@ -345,11 +343,9 @@ export default function BookingWizard() {
               <Feld label="Telefon (optional)">
                 <input value={telefon} onChange={(e) => setTelefon(e.target.value)} className="field" />
               </Feld>
-              <Feld label={`Flugnummer Hinflug${productCode === "VALET" ? " *" : " (optional)"}`}>
-                <input value={flugnummer} onChange={(e) => setFlugnummer(e.target.value)} className="field" placeholder="z. B. LH123" />
-              </Feld>
-              <Feld label="Flugnummer Rückflug (optional)">
+              <Feld label={`Flugnummer Rückflug${productCode === "VALET" ? " *" : " (optional)"}`}>
                 <input value={rueckflugnummer} onChange={(e) => setRueckflugnummer(e.target.value)} className="field" placeholder="z. B. LH124" />
+                <span className="mt-1 block text-xs text-subtle">Ankunft in Frankfurt – damit Ihr Fahrzeug pünktlich zur Landung bereitsteht.</span>
               </Feld>
               <Feld label="Kennzeichen">
                 <input value={kennzeichen} onChange={(e) => setKennzeichen(e.target.value)} className="field" placeholder="z. B. F-AB 1234" />

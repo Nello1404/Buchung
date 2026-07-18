@@ -33,11 +33,11 @@ export const createBookingSchema = quoteSchema
     }),
   })
   .superRefine((data, ctx) => {
-    if (data.productCode === "VALET" && !data.flugnummer) {
+    if (data.productCode === "VALET" && !data.rueckflugnummer) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Die Flugnummer ist bei Valet-Buchungen Pflicht.",
-        path: ["flugnummer"],
+        message: "Die Flugnummer des Rückflugs ist bei Valet-Buchungen Pflicht.",
+        path: ["rueckflugnummer"],
       });
     }
   });

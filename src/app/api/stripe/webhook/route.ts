@@ -76,7 +76,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     anreise: payment.booking.anreise,
     abreise: payment.booking.abreise,
     preisGesamtCent: payment.booking.preisGesamtCent,
-    flugnummer: payment.booking.flugnummer,
+    flugnummer: payment.booking.rueckflugnummer,
   });
 }
 

@@ -91,7 +91,7 @@ export async function sendeBuchungsbestaetigung(params: {
       <tr><td style="padding:4px 0;color:#666;">Produkt</td><td style="padding:4px 0;">${produktName}</td></tr>
       <tr><td style="padding:4px 0;color:#666;">Anreise</td><td style="padding:4px 0;">${formatDatum.format(anreise)} Uhr</td></tr>
       <tr><td style="padding:4px 0;color:#666;">Abreise</td><td style="padding:4px 0;">${formatDatum.format(abreise)} Uhr</td></tr>
-      ${flugnummer ? `<tr><td style="padding:4px 0;color:#666;">Flugnummer</td><td style="padding:4px 0;">${flugnummer}</td></tr>` : ""}
+      ${flugnummer ? `<tr><td style="padding:4px 0;color:#666;">Flugnummer (Rückflug)</td><td style="padding:4px 0;">${flugnummer}</td></tr>` : ""}
       <tr><td style="padding:4px 0;color:#666;">Gesamtpreis</td><td style="padding:4px 0;font-weight:bold;">${centToEUR(preisGesamtCent)}</td></tr>
     </table>
     <p><strong>So funktioniert's:</strong></p>

@@ -111,7 +111,7 @@ export async function POST(request: Request) {
         produktName: voll.product.name,
         anreise: voll.anreise,
         abreise: voll.abreise,
-        flugnummer: voll.flugnummer,
+        flugnummer: voll.rueckflugnummer,
         fotoUrls: protokoll.fotos.map((f) => f.url),
         unterschriftUrl: protokoll.unterschriftUrl,
       });
