@@ -291,7 +291,7 @@ function DetailListe({
                 {e.flugnummer ? ` · ✈ ${e.flugnummer}` : ""}
               </div>
               {e.addons.length > 0 && <div className="mt-0.5 text-xs text-subtle">{e.addons.join(", ")}</div>}
-              <div className="mt-2">
+              <div className="mt-2 flex flex-wrap items-center gap-3">
                 {erledigt(e.status) ? (
                   <span className="text-xs text-[var(--success)]">✓ erledigt</span>
                 ) : (
@@ -302,6 +302,13 @@ function DetailListe({
                     {aktion === "ankunft" ? "Ankunft erledigt" : "Abholung erledigt"}
                   </button>
                 )}
+                <Link
+                  href={`/admin/buchungen/${e.id}/protokoll`}
+                  target="_blank"
+                  className="text-xs text-muted underline-offset-2 hover:text-gold hover:underline"
+                >
+                  Protokoll
+                </Link>
               </div>
             </li>
           ))}

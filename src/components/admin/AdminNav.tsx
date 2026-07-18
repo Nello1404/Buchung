@@ -7,10 +7,12 @@ const links = [
   { href: "/admin", label: "Dashboard" },
   { href: "/cockpit", label: "Betriebszentrale" },
   { href: "/admin/buchungen", label: "Buchungen" },
+  { href: "/admin/manuell", label: "Manuell buchen" },
   { href: "/admin/tarife", label: "Preise & Tarife" },
   { href: "/admin/saison", label: "Saison & Sperrtage" },
   { href: "/admin/kapazitaet", label: "Kapazität" },
   { href: "/admin/gutscheine", label: "Gutscheine" },
+  { href: "/admin/bilder", label: "Bilder" },
   { href: "/admin/inhalte", label: "Rechtstexte" },
 ];
 
@@ -28,10 +30,15 @@ export function AdminNav({ email }: { email: string }) {
     <aside className="border-b border-line bg-surface md:w-64 md:border-b-0 md:border-r">
       <div className="flex flex-col gap-1 p-4 md:h-full">
         <div className="mb-4 px-2 pt-2">
-          <span className="font-serif text-lg font-semibold text-ink">
-            FlySpot <span className="text-gold-gradient">Valet</span>
-          </span>
-          <p className="mt-0.5 text-xs text-subtle">Admin-Bereich</p>
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full border border-line-gold">
+              <span className="font-serif text-xs font-bold text-gold-gradient">FS</span>
+            </span>
+            <span className="font-serif text-lg font-semibold text-ink">
+              FlySpot <span className="text-gold-gradient">Valet</span>
+            </span>
+          </div>
+          <p className="mt-1.5 text-xs text-subtle">Admin-Bereich</p>
         </div>
 
         <nav className="flex flex-1 flex-col gap-1">

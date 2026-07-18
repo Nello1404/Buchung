@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { getTvData } from "@/lib/cockpit";
+import { BrandLogo } from "@/components/BrandLogo";
 
 type TvData = Awaited<ReturnType<typeof getTvData>>;
 const POLL_MS = 20000;
@@ -33,7 +34,7 @@ export function TvBoard({ initial }: { initial: TvData }) {
   return (
     <div className="min-h-screen p-6 md:p-10">
       <div className="flex items-center justify-between">
-        <span className="font-serif text-2xl font-semibold text-ink">FlySpot <span className="text-gold-gradient">Valet</span></span>
+        <BrandLogo href={null} imgClassName="h-16 w-auto" />
         <span className="text-sm text-muted">{jetzt} Uhr</span>
       </div>
 

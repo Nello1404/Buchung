@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { BrandLogo } from "@/components/BrandLogo";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -37,11 +38,9 @@ export default function AdminLoginPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-6">
       <div className="w-full max-w-sm">
-        <div className="mb-8 text-center">
-          <span className="font-serif text-2xl font-semibold text-ink">
-            FlySpot <span className="text-gold-gradient">Valet</span>
-          </span>
-          <p className="mt-1 text-sm text-muted">Admin-Bereich</p>
+        <div className="mb-8 flex flex-col items-center text-center">
+          <BrandLogo href={null} imgClassName="h-40 w-auto" />
+          <p className="mt-2 text-sm text-muted">Admin-Bereich</p>
         </div>
         <form onSubmit={handleSubmit} className="card space-y-4 p-8">
           <label className="block">

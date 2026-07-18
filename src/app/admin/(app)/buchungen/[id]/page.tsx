@@ -3,21 +3,40 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { centZuEUR, formatDatumZeit } from "@/lib/format";
 import { StatusBadge } from "@/components/admin/StatusBadge";
+import { ZahlungMarkieren } from "@/components/admin/ZahlungMarkieren";
+import { BuchungLoeschen } from "@/components/admin/BuchungLoeschen";
+
+const ZAHLUNGSART_LABEL: Record<string, string> = {
+  BAR: "Bar",
+  EC: "EC-/Kartenzahlung",
+  UEBERWEISUNG: "Überweisung",
+  RECHNUNG: "Auf Rechnung",
+};
 
 export default async function BuchungDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const b = await prisma.booking.findUnique({
     where: { id },
-    include: { customer: true, vehicle: true, product: true, addons: true, payment: true },
+    include: {
+      customer: true,
+      vehicle: true,
+      product: true,
+      addons: true,
+      payment: true,
+      _count: { select: { protokolle: true } },
+    },
   });
   if (!b) notFound();
 
   return (
     <div className="max-w-2xl">
       <Link href="/admin/buchungen" className="text-sm text-muted hover:text-ink">← Zurück zur Liste</Link>
-      <div className="mt-4 flex items-center gap-3">
+      <div className="mt-4 flex flex-wrap items-center gap-3">
         <h1 className="font-serif text-2xl font-semibold text-ink">{b.bookingNumber}</h1>
         <StatusBadge status={b.status} />
+        <Link href={`/admin/buchungen/${b.id}/protokoll`} className="btn-outline !px-4 !py-1.5 text-sm">
+          Übergabeprotokoll{b._count.protokolle > 0 ? ` (${b._count.protokolle})` : ""}
+        </Link>
       </div>
 
       <div className="mt-6 grid gap-6 sm:grid-cols-2">
@@ -43,8 +62,26 @@ export default async function BuchungDetail({ params }: { params: Promise<{ id: 
           {b.addons.map((a) => <Z key={a.id} l={a.nameSnapshot} w={centZuEUR(a.preisCentSnapshot)} />)}
           {b.gutscheinRabattCent > 0 && <Z l="Gutschein" w={`-${centZuEUR(b.gutscheinRabattCent)}`} />}
           <Z l="Gesamt" w={centZuEUR(b.preisGesamtCent)} gold />
-          {b.payment && <Z l="Erstattet" w={centZuEUR(b.payment.erstattetCent)} />}
+          {b.payment?.zahlungsart && <Z l="Zahlungsart" w={ZAHLUNGSART_LABEL[b.payment.zahlungsart] ?? b.payment.zahlungsart} />}
+          {b.payment && (
+            <Z l="Zahlungsstatus" w={b.payment.status === "BEZAHLT" ? "Bezahlt" : b.payment.status === "OFFEN" ? "Offen" : b.payment.status} />
+          )}
+          {b.payment && b.payment.erstattetCent > 0 && <Z l="Erstattet" w={centZuEUR(b.payment.erstattetCent)} />}
+          {b.payment && b.payment.status === "OFFEN" && b.status !== "STORNIERT" && (
+            <ZahlungMarkieren bookingId={b.id} />
+          )}
         </Block>
+
+        {b.notiz && (
+          <Block titel="Interne Notiz">
+            <p className="text-sm text-muted">{b.notiz}</p>
+          </Block>
+        )}
+      </div>
+
+      <div className="mt-10 border-t border-line pt-5">
+        <p className="mb-2 text-xs text-subtle">Testdaten-Verwaltung – entfernt die Buchung endgültig und gibt das Kontingent frei.</p>
+        <BuchungLoeschen bookingId={b.id} bookingNumber={b.bookingNumber} />
       </div>
     </div>
   );

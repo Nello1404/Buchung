@@ -16,6 +16,21 @@ enum ProductCode {
   SHUTTLE
 }
 
+/// Kategorien für die Bildergalerie auf der Webseite.
+enum ImageCategory {
+  STELLPLATZ
+  TEAM
+  FLOTTE
+  AUFBEREITUNG
+}
+
+/// Zeitpunkt eines Übergabeprotokolls: Fahrzeug-Übernahme (Einfahrt) oder
+/// Rückgabe an den Kunden (Ausfahrt).
+enum HandoverPhase {
+  EINFAHRT
+  AUSFAHRT
+}
+
 enum BookingStatus {
   ANGEFRAGT
   BEZAHLT
@@ -231,8 +246,11 @@ model Payment {
   betragCent            Int
   erstattetCent         Int           @default(0)
   status                PaymentStatus @default(OFFEN)
-  /// Zeitpunkt des Zahlungseingangs (gesetzt vom Stripe-Webhook). Stichtag für
-  /// die Umsatzauswertung im Cockpit.
+  /// Zahlungsart: null = Online/Stripe. Bei manuellen Buchungen (Telefonkunden)
+  /// z. B. "BAR", "EC", "UEBERWEISUNG" oder "RECHNUNG".
+  zahlungsart           String?
+  /// Zeitpunkt des Zahlungseingangs (gesetzt vom Stripe-Webhook oder manuell).
+  /// Stichtag für die Umsatzauswertung im Cockpit.
   bezahltAm             DateTime?
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
@@ -268,6 +286,9 @@ model Booking {
   storniertAm     DateTime?
   erstattungProzent Int?
 
+  /// Interne Notiz (z. B. bei manuellen Telefonbuchungen). Nicht kundensichtbar.
+  notiz           String?
+
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
@@ -275,6 +296,7 @@ model Booking {
   payment         Payment?
   addons          BookingAddon[]
   voucherRedemption Voucher?    @relation("VoucherRedemption")
+  protokolle      HandoverProtocol[]
 
   @@index([customerId])
   @@index([productId, anreise, abreise])
@@ -366,6 +388,56 @@ model ContentPage {
   titel     String
   inhalt    String   @default("")
   updatedAt DateTime @updatedAt
+}
+
+/// Über den Admin gepflegte Bilder (Stellplatz/Team/Flotte/Aufbereitung),
+/// gespeichert in Vercel Blob. `url` = öffentliche Blob-URL, `pathname` wird
+/// zum Löschen aus dem Blob-Store benötigt.
+model SiteImage {
+  id        String        @id @default(cuid())
+  kategorie ImageCategory
+  url       String
+  pathname  String
+  alt       String        @default("")
+  sortOrder Int           @default(0)
+  active    Boolean       @default(true)
+  createdAt DateTime      @default(now())
+
+  @@index([kategorie, active, sortOrder])
+}
+
+/// Übergabeprotokoll: dokumentiert Fahrzeug-Übernahme/-Rückgabe durch den Fahrer
+/// (Kilometer-/Tankstand, Bemerkungen, Fotos, Kundenunterschrift).
+model HandoverProtocol {
+  id               String        @id @default(cuid())
+  bookingId        String
+  booking          Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  phase            HandoverPhase
+  fahrer           String
+  kmStand          Int?
+  tankstand        String?
+  bemerkung        String?
+  /// Kundenunterschrift als Bild (Vercel Blob). Optional, falls kein Blob-Store.
+  unterschriftUrl  String?
+  unterschriftPfad String?
+  erstelltVon      String
+  createdAt        DateTime      @default(now())
+
+  fotos            HandoverPhoto[]
+
+  @@index([bookingId])
+}
+
+/// Einzelnes Foto zu einem Übergabeprotokoll (in Vercel Blob gespeichert).
+model HandoverPhoto {
+  id         String           @id @default(cuid())
+  protocolId String
+  protocol   HandoverProtocol @relation(fields: [protocolId], references: [id], onDelete: Cascade)
+  url        String
+  pathname   String
+  createdAt  DateTime         @default(now())
+
+  @@index([protocolId])
 }
 
 /// Audit-Log für Änderungen an Finanzdaten (wer, wann, was).
