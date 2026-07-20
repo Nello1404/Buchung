@@ -266,6 +266,18 @@ model ServiceAnfrage {
   @@index([status, createdAt])
 }
 
+/// Vom Admin gepflegte Liste möglicher Fahrer für das Übergabeprotokoll.
+/// Im Protokoll wird der Name als Snapshot gespeichert (HandoverProtocol.fahrer),
+/// damit spätere Änderungen bestehende Protokolle nicht verändern.
+model Fahrer {
+  id        String   @id @default(cuid())
+  name      String
+  active    Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 enum VoucherTyp {
   TAG_GRATIS // 1 Tag gratis (Langzeit-Tagespreis des Produkts)
   PROZENT    // prozentualer Rabatt auf Parken + Zusatzservices
