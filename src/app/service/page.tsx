@@ -5,6 +5,10 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { ServiceAnfrageForm } from "@/components/ServiceAnfrageForm";
 import { centZuEUR } from "@/lib/format";
 
+// Statisch mit Revalidierung (wie die Startseite); Katalogänderungen im Admin
+// lösen zusätzlich eine sofortige, gezielte Neuberechnung dieser Seite aus.
+export const revalidate = 300;
+
 export const metadata = {
   title: "FlySpot Service – Aufbereitung, Reinigung & Smart Repair | FlySpot Valet",
   description:
