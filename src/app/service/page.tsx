@@ -90,8 +90,9 @@ export default async function ServicePage() {
           <div className="mx-auto w-full max-w-5xl px-6 py-16">
             <h2 className="font-serif text-2xl font-semibold text-ink sm:text-3xl">Unsere Leistungen</h2>
             <p className="mt-2 max-w-2xl text-muted">
-              Festpreise gelten je Fahrzeugklasse. Reparaturen und Detailing kalkulieren wir nach
-              Begutachtung – dafür erhalten Sie ein individuelles Angebot.
+              Festpreis-Leistungen buchen Sie bequem direkt bei Ihrer Parkbuchung mit – der Preis
+              richtet sich nach Ihrer Fahrzeugklasse. Reparaturen und Detailing kalkulieren wir nach
+              Begutachtung; dafür erhalten Sie ein individuelles Angebot.
             </p>
 
             <div className="mt-10 space-y-12">
@@ -117,9 +118,15 @@ export default async function ServicePage() {
                             ) : (
                               <span className="text-sm text-subtle">individuelles Angebot</span>
                             )}
-                            <a href="#anfrage" className="text-sm font-medium text-gold hover:underline">
-                              Anfragen →
-                            </a>
+                            {s.typ === "FESTPREIS" ? (
+                              <Link href="/buchen" className="text-sm font-medium text-gold hover:underline">
+                                Bei Buchung buchen →
+                              </Link>
+                            ) : (
+                              <a href="#anfrage" className="text-sm font-medium text-gold hover:underline">
+                                Anfragen →
+                              </a>
+                            )}
                           </div>
                         </div>
                       );

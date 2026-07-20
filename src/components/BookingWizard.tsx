@@ -52,6 +52,9 @@ export default function BookingWizard() {
   const [addonsList, setAddonsList] = useState<Addon[]>([]);
   const [addonCodes, setAddonCodes] = useState<string[]>([]);
 
+  const [serviceList, setServiceList] = useState<Addon[]>([]);
+  const [serviceCodes, setServiceCodes] = useState<string[]>([]);
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [telefon, setTelefon] = useState("");
@@ -90,6 +93,26 @@ export default function BookingWizard() {
       .catch(() => setAddonsList([]));
   }, [vehicleClassCode]);
 
+  // FlySpot-Service-Festpreise (online buchbar) für die gewählte Fahrzeugklasse laden.
+  useEffect(() => {
+    if (!vehicleClassCode) return;
+    fetch("/api/service")
+      .then((r) => r.json())
+      .then((d) => {
+        type Svc = { code: string; name: string; beschreibung: string | null; typ: string; preise: Record<string, number> };
+        const list: Addon[] = (d.services ?? [])
+          .filter((s: Svc) => s.typ === "FESTPREIS" && s.preise[vehicleClassCode] != null)
+          .map((s: Svc) => ({
+            code: s.code,
+            name: s.name,
+            description: s.beschreibung,
+            preisCent: s.preise[vehicleClassCode],
+          }));
+        setServiceList(list);
+      })
+      .catch(() => setServiceList([]));
+  }, [vehicleClassCode]);
+
   const quotePayload = useMemo(
     () => ({
       productCode,
@@ -99,10 +122,11 @@ export default function BookingWizard() {
       abreiseDatum,
       abreiseZeit,
       addonCodes,
+      serviceCodes,
       voucherCode: voucherCode.trim() || undefined,
       customerEmail: email.trim() || undefined,
     }),
-    [productCode, vehicleClassCode, anreiseDatum, anreiseZeit, abreiseDatum, abreiseZeit, addonCodes, voucherCode, email]
+    [productCode, vehicleClassCode, anreiseDatum, anreiseZeit, abreiseDatum, abreiseZeit, addonCodes, serviceCodes, voucherCode, email]
   );
 
   useEffect(() => {
@@ -140,6 +164,10 @@ export default function BookingWizard() {
 
   function toggleAddon(code: string) {
     setAddonCodes((prev) => (prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]));
+  }
+
+  function toggleService(code: string) {
+    setServiceCodes((prev) => (prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]));
   }
 
   const schritt1Gueltig =
@@ -287,38 +315,85 @@ export default function BookingWizard() {
         {step === 2 && (
           <div className="space-y-6">
             <p className="text-sm leading-relaxed text-muted">
-              Zusatzservices werden während Ihrer Standzeit bei uns ausgeführt – Sie müssen dafür keinen
+              Zusatzleistungen werden während Ihrer Standzeit bei uns ausgeführt – Sie müssen dafür keinen
               gesonderten Termin wählen.
             </p>
-            <div className="space-y-3">
-              {addonsList.map((addon) => {
-                const gewaehlt = addonCodes.includes(addon.code);
-                return (
-                  <label
-                    key={addon.code}
-                    className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors ${
-                      gewaehlt ? "border-line-gold bg-[rgba(200,164,92,0.06)]" : "border-line hover:border-line-gold"
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={gewaehlt}
-                      onChange={() => toggleAddon(addon.code)}
-                      className="mt-1 h-4 w-4 accent-[var(--gold)]"
-                    />
-                    <div>
-                      <div className="font-medium text-ink">
-                        {addon.name}
-                        {addon.preisCent != null ? (
-                          <span className="text-gold"> – {centZuEUR(addon.preisCent)}</span>
-                        ) : ""}
+
+            {addonsList.length > 0 && (
+              <div className="space-y-3">
+                {addonsList.map((addon) => {
+                  const gewaehlt = addonCodes.includes(addon.code);
+                  return (
+                    <label
+                      key={addon.code}
+                      className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors ${
+                        gewaehlt ? "border-line-gold bg-[rgba(200,164,92,0.06)]" : "border-line hover:border-line-gold"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={gewaehlt}
+                        onChange={() => toggleAddon(addon.code)}
+                        className="mt-1 h-4 w-4 accent-[var(--gold)]"
+                      />
+                      <div>
+                        <div className="font-medium text-ink">
+                          {addon.name}
+                          {addon.preisCent != null ? (
+                            <span className="text-gold"> – {centZuEUR(addon.preisCent)}</span>
+                          ) : ""}
+                        </div>
+                        {addon.description && <div className="mt-0.5 text-xs text-muted">{addon.description}</div>}
                       </div>
-                      {addon.description && <div className="mt-0.5 text-xs text-muted">{addon.description}</div>}
-                    </div>
-                  </label>
-                );
-              })}
-            </div>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+
+            {serviceList.length > 0 && (
+              <div>
+                <div className="mb-3 flex items-baseline justify-between">
+                  <span className="text-sm font-medium text-ink">FlySpot Service – Pflege &amp; Aufbereitung</span>
+                  <a href="/service" target="_blank" rel="noopener" className="text-xs text-gold hover:underline">
+                    Alle Leistungen
+                  </a>
+                </div>
+                <div className="space-y-3">
+                  {serviceList.map((svc) => {
+                    const gewaehlt = serviceCodes.includes(svc.code);
+                    return (
+                      <label
+                        key={svc.code}
+                        className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors ${
+                          gewaehlt ? "border-line-gold bg-[rgba(200,164,92,0.06)]" : "border-line hover:border-line-gold"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={gewaehlt}
+                          onChange={() => toggleService(svc.code)}
+                          className="mt-1 h-4 w-4 accent-[var(--gold)]"
+                        />
+                        <div>
+                          <div className="font-medium text-ink">
+                            {svc.name}
+                            {svc.preisCent != null ? (
+                              <span className="text-gold"> – {centZuEUR(svc.preisCent)}</span>
+                            ) : ""}
+                          </div>
+                          {svc.description && <div className="mt-0.5 text-xs text-muted">{svc.description}</div>}
+                        </div>
+                      </label>
+                    );
+                  })}
+                </div>
+                <p className="mt-3 text-xs text-subtle">
+                  Weitere Leistungen wie Detailing oder Smart Repair (Kratzer, Dellen, Steinschlag)
+                  erhalten Sie auf Anfrage – siehe „Alle Leistungen“.
+                </p>
+              </div>
+            )}
 
             <PreisAnzeige quote={quote} loading={quoteLoading} error={quoteError} />
 

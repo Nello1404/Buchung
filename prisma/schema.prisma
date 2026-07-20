@@ -183,11 +183,16 @@ model ServiceAddonPrice {
 }
 
 model BookingAddon {
-  id             String       @id @default(cuid())
+  id             String        @id @default(cuid())
   bookingId      String
-  booking        Booking      @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  serviceAddonId String
-  serviceAddon   ServiceAddon @relation(fields: [serviceAddonId], references: [id])
+  booking        Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  /// Herkunft der Zusatzleistung: entweder ein Buchungs-Zusatzservice (ServiceAddon)
+  /// ODER eine Festpreis-Leistung aus dem FlySpot-Service-Katalog (Service). Genau
+  /// eines von beiden ist gesetzt; Name und Preis werden ohnehin als Snapshot gehalten.
+  serviceAddonId String?
+  serviceAddon   ServiceAddon? @relation(fields: [serviceAddonId], references: [id])
+  serviceId      String?
+  service        Service?      @relation(fields: [serviceId], references: [id])
   /// Preis zum Buchungszeitpunkt (Snapshot) – spätere Preisänderungen im Admin
   /// wirken sich nicht rückwirkend auf bestehende Buchungen aus.
   preisCentSnapshot Int
@@ -222,7 +227,8 @@ model Service {
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
-  preise      ServicePreis[]
+  preise        ServicePreis[]
+  bookingAddons BookingAddon[]
 }
 
 /// Festpreis eines Service je Fahrzeugklasse. Nur relevant für typ = FESTPREIS.
