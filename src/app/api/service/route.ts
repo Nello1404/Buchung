@@ -30,6 +30,8 @@ export async function GET() {
       kategorie: s.kategorie,
       beschreibung: s.beschreibung,
       typ: s.typ,
+      inBuchung: s.inBuchung,
+      aufServiceSeite: s.aufServiceSeite,
       preise: Object.fromEntries(s.preise.map((p) => [p.vehicleClass.code, p.preisCent])),
     })),
   });

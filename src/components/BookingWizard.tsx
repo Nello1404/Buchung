@@ -99,9 +99,9 @@ export default function BookingWizard() {
     fetch("/api/service")
       .then((r) => r.json())
       .then((d) => {
-        type Svc = { code: string; name: string; beschreibung: string | null; typ: string; preise: Record<string, number> };
+        type Svc = { code: string; name: string; beschreibung: string | null; typ: string; inBuchung: boolean; preise: Record<string, number> };
         const list: Addon[] = (d.services ?? [])
-          .filter((s: Svc) => s.typ === "FESTPREIS" && s.preise[vehicleClassCode] != null)
+          .filter((s: Svc) => s.typ === "FESTPREIS" && s.inBuchung && s.preise[vehicleClassCode] != null)
           .map((s: Svc) => ({
             code: s.code,
             name: s.name,

@@ -222,6 +222,10 @@ model Service {
   kategorie   String
   beschreibung String?
   typ         ServiceTyp @default(ANFRAGE)
+  /// In der Park-Buchungsmaske als Zusatzleistung anbieten (nur sinnvoll bei FESTPREIS).
+  inBuchung   Boolean    @default(false)
+  /// Auf der öffentlichen Service-Seite für Kunden ohne Parkbuchung anbieten.
+  aufServiceSeite Boolean @default(true)
   sortOrder   Int        @default(0)
   active      Boolean    @default(true)
   createdAt   DateTime   @default(now())
