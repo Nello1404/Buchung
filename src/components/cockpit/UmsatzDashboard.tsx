@@ -96,7 +96,7 @@ export function UmsatzDashboard({ initial }: { initial: Umsatz }) {
             </p>
           </div>
           <div className="flex gap-3">
-            <Link href="/cockpit" className="btn-outline !px-4 !py-2 text-sm">← Cockpit</Link>
+            <Link href="/admin" className="btn-outline !px-4 !py-2 text-sm">← Übersicht</Link>
             <button onClick={sendeReport} disabled={reportLaeuft} className="btn-outline !px-4 !py-2 text-sm">
               {reportLaeuft ? "Sende…" : "Wochenreport senden"}
             </button>
