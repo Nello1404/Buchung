@@ -23,8 +23,8 @@ export default async function ProtokollPage({ params }: { params: Promise<{ id: 
   const hatEinfahrt = booking.protokolle.some((p) => p.phase === "EINFAHRT");
   const standardPhase: HandoverPhaseCode = hatEinfahrt ? "AUSFAHRT" : "EINFAHRT";
 
-  const fahrerListe = await prisma.fahrer.findMany({
-    where: { active: true },
+  const fahrerListe = await prisma.mitarbeiter.findMany({
+    where: { active: true, istFahrer: true },
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     select: { name: true },
   });

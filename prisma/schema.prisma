@@ -267,15 +267,44 @@ model ServiceAnfrage {
 }
 
 /// Vom Admin gepflegte Liste möglicher Fahrer für das Übergabeprotokoll.
-/// Im Protokoll wird der Name als Snapshot gespeichert (HandoverProtocol.fahrer),
-/// damit spätere Änderungen bestehende Protokolle nicht verändern.
-model Fahrer {
-  id        String   @id @default(cuid())
+/// Vom Admin gepflegte Mitarbeiter. Fahrer (istFahrer = true) erscheinen im
+/// Übergabeprotokoll zur Auswahl. Der Name wird im Protokoll als Snapshot
+/// gespeichert (HandoverProtocol.fahrer), damit spätere Änderungen bestehende
+/// Protokolle nicht verändern. Alle Mitarbeiter können in der Einsatzplanung
+/// verplant werden.
+model Mitarbeiter {
+  id        String    @id @default(cuid())
   name      String
-  active    Boolean  @default(true)
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  /// E-Mail für den Versand des persönlichen Einsatzplans (optional).
+  email     String?
+  /// Erscheint im Übergabeprotokoll als wählbarer Fahrer.
+  istFahrer Boolean   @default(true)
+  /// Freie Rollenbezeichnung (z. B. Fahrer, Büro, Aushilfe).
+  rolle     String?
+  active    Boolean   @default(true)
+  sortOrder Int       @default(0)
+  /// Geheimer Token für den persönlichen, abonnierbaren Kalender-Feed (.ics).
+  feedToken String    @unique @default(cuid())
+  schichten Schicht[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+/// Ein geplanter Einsatz (Schicht) eines Mitarbeiters an einem Tag.
+model Schicht {
+  id            String      @id @default(cuid())
+  mitarbeiterId String
+  mitarbeiter   Mitarbeiter @relation(fields: [mitarbeiterId], references: [id], onDelete: Cascade)
+  datum         DateTime    @db.Date
+  /// Start-/Endzeit als "HH:MM" (lokale Betriebszeit).
+  vonZeit       String
+  bisZeit       String
+  notiz         String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([datum])
+  @@index([mitarbeiterId, datum])
 }
 
 enum VoucherTyp {

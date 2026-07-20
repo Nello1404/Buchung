@@ -106,7 +106,7 @@ export function ProtokollForm({
                 <option>– keine Fahrer hinterlegt –</option>
               </select>
               <span className="mt-1 block text-xs text-[var(--danger)]">
-                Bitte zuerst unter „Fahrer“ im Admin mindestens einen Fahrer anlegen.
+                Bitte zuerst unter „Mitarbeiter“ im Admin mindestens einen Fahrer anlegen (Kennzeichen „Ist Fahrer“).
               </span>
             </>
           )}
