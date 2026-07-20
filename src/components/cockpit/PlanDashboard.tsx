@@ -44,7 +44,7 @@ export function PlanDashboard({ initial, kategorien: katInit, schwellen: schwIni
       <div className="mx-auto max-w-5xl">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="font-serif text-2xl font-semibold text-ink">Plan-Ist</h1>
-          <Link href="/cockpit" className="btn-outline !px-4 !py-2 text-sm">← Cockpit</Link>
+          <Link href="/admin" className="btn-outline !px-4 !py-2 text-sm">← Übersicht</Link>
         </div>
 
         <div className="mt-5 flex items-center gap-4">

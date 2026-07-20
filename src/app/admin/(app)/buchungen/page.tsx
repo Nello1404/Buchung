@@ -50,8 +50,13 @@ export default async function BuchungenPage({
 
   return (
     <div>
-      <h1 className="font-serif text-2xl font-semibold text-ink">Buchungen</h1>
-      <p className="mt-1 text-sm text-muted">Tagesgeschäft und alle Buchungen im Überblick.</p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="font-serif text-2xl font-semibold text-ink">Buchungen</h1>
+          <p className="mt-1 text-sm text-muted">Tagesgeschäft und alle Buchungen im Überblick.</p>
+        </div>
+        <Link href="/admin/manuell" className="btn-gold !px-4 !py-2 text-sm">+ Neue Buchung</Link>
+      </div>
 
       {!suche && (
         <div className="mt-8 grid gap-6 lg:grid-cols-2">

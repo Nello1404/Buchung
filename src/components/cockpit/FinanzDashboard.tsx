@@ -63,7 +63,7 @@ export function FinanzDashboard({ initial }: { initial: FinanzData }) {
             <p className="text-xs text-subtle">Betriebsübersicht — ersetzt nicht die Buchhaltung des Steuerberaters.</p>
           </div>
           <div className="flex gap-3">
-            <Link href="/cockpit" className="btn-outline !px-4 !py-2 text-sm">← Cockpit</Link>
+            <Link href="/admin" className="btn-outline !px-4 !py-2 text-sm">← Übersicht</Link>
             <a href={csvUrl} className="btn-gold !px-4 !py-2 text-sm">CSV-Export</a>
           </div>
         </div>

@@ -31,13 +31,21 @@ export function ManuelleBuchung() {
   const [vehicleClasses, setVehicleClasses] = useState<VehicleClass[]>([]);
   const [addonsList, setAddonsList] = useState<Addon[]>([]);
 
+  const inTagen = (n: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() + n);
+    return d.toISOString().slice(0, 10);
+  };
+
   const [productCode, setProductCode] = useState<"VALET" | "SHUTTLE">("VALET");
   const [vehicleClassCode, setVehicleClassCode] = useState("");
-  const [anreiseDatum, setAnreiseDatum] = useState("");
+  const [anreiseDatum, setAnreiseDatum] = useState(inTagen(3));
   const [anreiseZeit, setAnreiseZeit] = useState("10:00");
-  const [abreiseDatum, setAbreiseDatum] = useState("");
+  const [abreiseDatum, setAbreiseDatum] = useState(inTagen(6));
   const [abreiseZeit, setAbreiseZeit] = useState("18:00");
   const [addonCodes, setAddonCodes] = useState<string[]>([]);
+  const [serviceList, setServiceList] = useState<Addon[]>([]);
+  const [serviceCodes, setServiceCodes] = useState<string[]>([]);
   const [voucherCode, setVoucherCode] = useState("");
 
   const [name, setName] = useState("");
@@ -76,6 +84,21 @@ export function ManuelleBuchung() {
       .catch(() => setAddonsList([]));
   }, [vehicleClassCode]);
 
+  // FlySpot-Festpreis-Services (identisch zur Online-Buchung) für die Klasse laden.
+  useEffect(() => {
+    if (!vehicleClassCode) return;
+    fetch("/api/service")
+      .then((r) => r.json())
+      .then((d) => {
+        type Svc = { code: string; name: string; typ: string; inBuchung: boolean; preise: Record<string, number> };
+        const list: Addon[] = (d.services ?? [])
+          .filter((s: Svc) => s.typ === "FESTPREIS" && s.inBuchung && s.preise[vehicleClassCode] != null)
+          .map((s: Svc) => ({ code: s.code, name: s.name, preisCent: s.preise[vehicleClassCode] }));
+        setServiceList(list);
+      })
+      .catch(() => setServiceList([]));
+  }, [vehicleClassCode]);
+
   const quotePayload = useMemo(
     () => ({
       productCode,
@@ -85,10 +108,11 @@ export function ManuelleBuchung() {
       abreiseDatum,
       abreiseZeit,
       addonCodes,
+      serviceCodes,
       voucherCode: voucherCode.trim() || undefined,
       customerEmail: email.trim() || undefined,
     }),
-    [productCode, vehicleClassCode, anreiseDatum, anreiseZeit, abreiseDatum, abreiseZeit, addonCodes, voucherCode, email]
+    [productCode, vehicleClassCode, anreiseDatum, anreiseZeit, abreiseDatum, abreiseZeit, addonCodes, serviceCodes, voucherCode, email]
   );
 
   useEffect(() => {
@@ -124,6 +148,9 @@ export function ManuelleBuchung() {
   function toggleAddon(code: string) {
     setAddonCodes((prev) => (prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]));
   }
+  function toggleService(code: string) {
+    setServiceCodes((prev) => (prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]));
+  }
 
   async function absenden(e: React.FormEvent) {
     e.preventDefault();
@@ -142,6 +169,7 @@ export function ManuelleBuchung() {
           abreiseDatum,
           abreiseZeit,
           addonCodes,
+          serviceCodes,
           voucherCode: voucherCode.trim() || undefined,
           rueckflugnummer: rueckflugnummer.trim() || undefined,
           zahlungsart,
@@ -161,14 +189,25 @@ export function ManuelleBuchung() {
         setSubmitting(false);
         return;
       }
-      router.push(`/admin/buchungen/${d.bookingId}`);
+      router.push(`/admin/buchungen/${d.bookingId}?neu=1`);
     } catch {
       setFehler("Buchung fehlgeschlagen. Bitte erneut versuchen.");
       setSubmitting(false);
     }
   }
 
-  const preisOk = quote && quote.verfuegbar && !quoteError;
+  // Klartext, warum „Buchung anlegen" (noch) nicht möglich ist – sonst rät man vor
+  // einem grauen Knopf. null = alles bereit.
+  const blockGrund: string | null = (() => {
+    if (!anreiseDatum || !abreiseDatum || !vehicleClassCode) return "Bitte Zeitraum und Fahrzeugklasse wählen.";
+    if (quoteError) return quoteError;
+    if (!quote) return "Preis wird berechnet …";
+    if (!quote.verfuegbar) return "Für den Zeitraum ist kein Kontingent frei.";
+    if (name.trim().length < 2) return "Bitte den Kundennamen angeben.";
+    if (kennzeichen.trim().length < 2) return "Bitte das Kennzeichen angeben.";
+    if (productCode === "VALET" && !rueckflugnummer.trim()) return "Bitte die Rückflugnummer angeben (bei Valet Pflicht).";
+    return null;
+  })();
 
   return (
     <form onSubmit={absenden} className="mt-8 grid gap-8 lg:grid-cols-[1fr_320px]">
@@ -223,6 +262,25 @@ export function ManuelleBuchung() {
                     }`}
                   >
                     {a.name} · {centZuEUR(a.preisCent)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {serviceList.length > 0 && (
+            <div>
+              <span className="mb-1.5 block text-sm font-medium text-ink">FlySpot Service (Pflege &amp; Aufbereitung)</span>
+              <div className="flex flex-wrap gap-2">
+                {serviceList.map((s) => (
+                  <button
+                    type="button"
+                    key={s.code}
+                    onClick={() => toggleService(s.code)}
+                    className={`rounded-full border px-3 py-1.5 text-sm transition-colors ${
+                      serviceCodes.includes(s.code) ? "border-line-gold text-gold" : "border-line text-muted hover:text-ink"
+                    }`}
+                  >
+                    {s.name} · {centZuEUR(s.preisCent)}
                   </button>
                 ))}
               </div>
@@ -326,9 +384,10 @@ export function ManuelleBuchung() {
           )}
           {fehler && <p className="text-sm text-[var(--danger)]">{fehler}</p>}
           {erfolg && <p className="text-sm text-[var(--success)]">{erfolg}</p>}
-          <button type="submit" disabled={submitting || !preisOk || !name || !kennzeichen} className="btn-gold w-full">
+          <button type="submit" disabled={submitting || blockGrund !== null} className="btn-gold w-full">
             {submitting ? "Wird gebucht …" : "Buchung anlegen"}
           </button>
+          {blockGrund && !quoteError && <p className="text-center text-xs text-subtle">{blockGrund}</p>}
         </div>
       </aside>
     </form>

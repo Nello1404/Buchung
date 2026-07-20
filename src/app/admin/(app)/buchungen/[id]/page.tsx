@@ -14,8 +14,15 @@ const ZAHLUNGSART_LABEL: Record<string, string> = {
   RECHNUNG: "Auf Rechnung",
 };
 
-export default async function BuchungDetail({ params }: { params: Promise<{ id: string }> }) {
+export default async function BuchungDetail({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ neu?: string }>;
+}) {
   const { id } = await params;
+  const { neu } = await searchParams;
   const b = await prisma.booking.findUnique({
     where: { id },
     include: {
@@ -32,6 +39,11 @@ export default async function BuchungDetail({ params }: { params: Promise<{ id: 
   return (
     <div className="max-w-2xl">
       <Link href="/admin/buchungen" className="text-sm text-muted hover:text-ink">← Zurück zur Liste</Link>
+      {neu && (
+        <div className="mt-4 rounded-lg border border-line-gold bg-[rgba(200,164,92,0.08)] px-4 py-3 text-sm text-ink">
+          ✓ Buchung <span className="font-medium text-gold">{b.bookingNumber}</span> wurde angelegt.
+        </div>
+      )}
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <h1 className="font-serif text-2xl font-semibold text-ink">{b.bookingNumber}</h1>
         <StatusBadge status={b.status} />
@@ -57,7 +69,6 @@ export default async function BuchungDetail({ params }: { params: Promise<{ id: 
           <Z l="Anreise" w={`${formatDatumZeit.format(b.anreise)} Uhr`} />
           <Z l="Abreise" w={`${formatDatumZeit.format(b.abreise)} Uhr`} />
           <Z l="Flugnummer (Rückflug)" w={b.rueckflugnummer ?? "–"} />
-          {b.flugnummer && <Z l="Flug Hinreise (alt)" w={b.flugnummer} />}
           <div className="flex items-center justify-between gap-4 py-1">
             <dt className="text-muted">Ankunft (live)</dt>
             <dd><FlugStatusBadge bookingId={b.id} /></dd>
