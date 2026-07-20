@@ -23,6 +23,12 @@ export default async function ProtokollPage({ params }: { params: Promise<{ id: 
   const hatEinfahrt = booking.protokolle.some((p) => p.phase === "EINFAHRT");
   const standardPhase: HandoverPhaseCode = hatEinfahrt ? "AUSFAHRT" : "EINFAHRT";
 
+  const fahrerListe = await prisma.fahrer.findMany({
+    where: { active: true },
+    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+    select: { name: true },
+  });
+
   return (
     <div className="max-w-3xl">
       <Link href={`/admin/buchungen/${id}`} className="text-sm text-muted hover:text-ink">← Zurück zur Buchung</Link>
@@ -33,7 +39,12 @@ export default async function ProtokollPage({ params }: { params: Promise<{ id: 
       </p>
 
       <div className="mt-8">
-        <ProtokollForm bookingId={id} blobKonfiguriert={blobKonfiguriert()} standardPhase={standardPhase} />
+        <ProtokollForm
+          bookingId={id}
+          blobKonfiguriert={blobKonfiguriert()}
+          standardPhase={standardPhase}
+          fahrerNamen={fahrerListe.map((f) => f.name)}
+        />
       </div>
 
       <h2 className="mt-12 font-serif text-lg font-semibold text-ink">Erfasste Protokolle</h2>

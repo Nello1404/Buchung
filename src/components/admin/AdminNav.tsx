@@ -12,6 +12,7 @@ const alleLinks = [
   { href: "/admin/saison", label: "Saison & Sperrtage" },
   { href: "/admin/kapazitaet", label: "Kapazität" },
   { href: "/admin/gutscheine", label: "Gutscheine" },
+  { href: "/admin/fahrer", label: "Fahrer" },
   { href: "/admin/service", label: "Service-Katalog" },
   { href: "/admin/service-anfragen", label: "Service-Anfragen" },
   { href: "/admin/bilder", label: "Bilder" },
