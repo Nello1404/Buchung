@@ -404,6 +404,9 @@ model Booking {
 
   /// Interne Notiz (z. B. bei manuellen Telefonbuchungen). Nicht kundensichtbar.
   notiz           String?
+  /// Stellplatz/Reihe, an dem das Fahrzeug abgestellt ist (Freitext, z. B. "Reihe C / 12").
+  /// Wird beim Parken erfasst, damit die Abholung schnell geht.
+  stellplatz      String?
 
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
@@ -413,9 +416,24 @@ model Booking {
   addons          BookingAddon[]
   voucherRedemption Voucher?    @relation("VoucherRedemption")
   protokolle      HandoverProtocol[]
+  statusEvents    StatusEvent[]
 
   @@index([customerId])
   @@index([productId, anreise, abreise])
+}
+
+/// Verlauf der operativen Statuswechsel einer Buchung (für die Status-Zeitleiste:
+/// wann welcher Schritt, von wem). Erlaubt eine lückenlose, sichtbare Historie.
+model StatusEvent {
+  id        String        @id @default(cuid())
+  bookingId String
+  booking   Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  status    BookingStatus
+  /// Wer den Schritt gesetzt hat (E-Mail der Sitzung) oder "System".
+  von       String?
+  createdAt DateTime      @default(now())
+
+  @@index([bookingId, createdAt])
 }
 
 /// Globale, im Admin änderbare Einstellungen (Singleton-Row, id = "default").

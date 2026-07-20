@@ -147,6 +147,7 @@ export interface TagDetailEintrag {
   produkt: ProductCode;
   status: BookingStatus;
   flugnummer: string | null;
+  stellplatz: string | null;
   uhrzeitISO: string;
   addons: string[];
 }
@@ -178,6 +179,7 @@ export async function getTagDetail(datumISO: string) {
     produkt: b.product.code,
     status: b.status,
     flugnummer: b.flugnummer,
+    stellplatz: b.stellplatz,
     uhrzeitISO: zeit.toISOString(),
     addons: b.addons.map((a) => a.nameSnapshot),
   });

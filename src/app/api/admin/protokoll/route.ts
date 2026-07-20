@@ -5,6 +5,7 @@ import { ladeBildHoch, blobKonfiguriert } from "@/lib/blob";
 import { istPhase, phaseLabel } from "@/lib/handover";
 import { erzeugeProtokollPdf } from "@/lib/handover-pdf";
 import { sendeUebergabeprotokoll } from "@/lib/email";
+import { setzeBuchungStatus, flowIndex } from "@/lib/status-flow";
 
 const ERLAUBTE_TYPEN = ["image/jpeg", "image/png", "image/webp", "image/avif"];
 const MAX_BYTES = 8 * 1024 * 1024;
@@ -82,6 +83,20 @@ export async function POST(request: Request) {
     },
     include: { fotos: true },
   });
+
+  // Status mit dem Protokoll koppeln: Einfahrt → mindestens „Auto übernommen",
+  // Ausfahrt → „Abgeschlossen". Nur vorwärts, nie einen weiteren Schritt zurücknehmen.
+  try {
+    if (booking.status !== "STORNIERT") {
+      if (phase === "EINFAHRT" && flowIndex(booking.status) < flowIndex("UEBERGEBEN")) {
+        await setzeBuchungStatus(prisma, bookingId, "UEBERGEBEN", guard.session.email);
+      } else if (phase === "AUSFAHRT" && flowIndex(booking.status) < flowIndex("ABGESCHLOSSEN")) {
+        await setzeBuchungStatus(prisma, bookingId, "ABGESCHLOSSEN", guard.session.email);
+      }
+    }
+  } catch (e) {
+    console.error("Status-Kopplung Protokoll fehlgeschlagen:", e);
+  }
 
   // PDF erzeugen und per E-Mail ans Team schicken – nicht blockierend: ein Fehler
   // hier darf das bereits gespeicherte Protokoll nicht scheitern lassen.
