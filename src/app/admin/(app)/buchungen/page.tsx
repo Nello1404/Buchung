@@ -118,6 +118,7 @@ type Eintrag = {
   anreise: Date;
   abreise: Date;
   flugnummer: string | null;
+  stellplatz: string | null;
   customer: { name: string };
   vehicle: { kennzeichen: string } | null;
   product: { code: string };
@@ -141,6 +142,9 @@ function TagesListe({ titel, typ, eintraege }: { titel: string; typ: "anreise" |
                   {e.vehicle?.kennzeichen ?? "–"} · {e.product.code === "VALET" ? "Valet" : "Shuttle"}
                   {e.flugnummer ? ` · ✈ ${e.flugnummer}` : ""}
                 </div>
+                {typ === "abreise" && e.stellplatz && (
+                  <div className="mt-0.5 text-xs font-medium text-gold">📍 {e.stellplatz}</div>
+                )}
               </div>
               <span className="text-gold">{formatUhrzeit.format(typ === "anreise" ? e.anreise : e.abreise)} Uhr</span>
             </li>

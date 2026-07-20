@@ -85,7 +85,7 @@ export default async function AdminUebersicht() {
       {/* Heute: Ankünfte & Abholungen */}
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <TagesListe titel="Ankünfte heute (Abgabe)" eintraege={tag.ankuenfte} />
-        <TagesListe titel="Abholungen heute" eintraege={tag.abholungen} />
+        <TagesListe titel="Abholungen heute" eintraege={tag.abholungen} zeigeStellplatz />
       </div>
 
       {/* Auswertung */}
@@ -107,9 +107,9 @@ export default async function AdminUebersicht() {
   );
 }
 
-type Eintrag = { id: string; kunde: string; kennzeichen: string | null; produkt: string; uhrzeitISO: string };
+type Eintrag = { id: string; kunde: string; kennzeichen: string | null; produkt: string; stellplatz: string | null; uhrzeitISO: string };
 
-function TagesListe({ titel, eintraege }: { titel: string; eintraege: Eintrag[] }) {
+function TagesListe({ titel, eintraege, zeigeStellplatz }: { titel: string; eintraege: Eintrag[]; zeigeStellplatz?: boolean }) {
   return (
     <div className="card p-5">
       <h2 className="font-medium text-ink">{titel}</h2>
@@ -124,6 +124,9 @@ function TagesListe({ titel, eintraege }: { titel: string; eintraege: Eintrag[] 
                 <div className="text-xs text-muted">
                   {e.kennzeichen ?? "–"} · {e.produkt === "VALET" ? "Valet" : "Shuttle"}
                 </div>
+                {zeigeStellplatz && e.stellplatz && (
+                  <div className="mt-0.5 text-xs font-medium text-gold">📍 {e.stellplatz}</div>
+                )}
               </div>
               <span className="text-gold">{formatUhrzeit.format(new Date(e.uhrzeitISO))} Uhr</span>
             </li>

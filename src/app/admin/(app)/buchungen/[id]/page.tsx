@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { centZuEUR, formatDatumZeit } from "@/lib/format";
 import { StatusBadge } from "@/components/admin/StatusBadge";
+import { StatusSteuerung } from "@/components/admin/StatusSteuerung";
 import { ZahlungMarkieren } from "@/components/admin/ZahlungMarkieren";
 import { BuchungLoeschen } from "@/components/admin/BuchungLoeschen";
 import { FlugStatusBadge } from "@/components/FlugStatusBadge";
@@ -31,6 +32,7 @@ export default async function BuchungDetail({
       product: true,
       addons: true,
       payment: true,
+      statusEvents: { orderBy: { createdAt: "asc" } },
       _count: { select: { protokolle: true } },
     },
   });
@@ -51,6 +53,17 @@ export default async function BuchungDetail({
           Übergabeprotokoll{b._count.protokolle > 0 ? ` (${b._count.protokolle})` : ""}
         </Link>
       </div>
+
+      {b.status !== "STORNIERT" && (
+        <div className="mt-6">
+          <StatusSteuerung
+            bookingId={b.id}
+            status={b.status}
+            stellplatz={b.stellplatz}
+            events={b.statusEvents.map((e) => ({ status: e.status, createdAt: e.createdAt.toISOString(), von: e.von }))}
+          />
+        </div>
+      )}
 
       <div className="mt-6 grid gap-6 sm:grid-cols-2">
         <Block titel="Kunde">
