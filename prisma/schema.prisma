@@ -84,6 +84,7 @@ model VehicleClass {
   tariffRules       TariffRule[]
   seasonRates       SeasonRate[]
   addonPrices       ServiceAddonPrice[]
+  servicePreise     ServicePreis[]
   vehicles          Vehicle[]
 }
 
@@ -193,6 +194,66 @@ model BookingAddon {
   nameSnapshot      String
 
   @@index([bookingId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  FlySpot Service – Rundum-Serviceangebot rund ums Fahrzeug (Smart Repair,
+//  Glasreparatur, Dellen, Politur, Detailing, Innen-/Außenreinigung …).
+//  Getrennt von den Buchungs-Zusatzservices (ServiceAddon), weil es ein eigenes
+//  öffentliches Angebot mit Katalog- und Anfrage-Charakter ist.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum ServiceTyp {
+  FESTPREIS // fester Preis je Fahrzeugklasse – online direkt buchbar
+  ANFRAGE   // individuelles Angebot – Kunde stellt Anfrage, Team meldet sich
+}
+
+model Service {
+  id          String     @id @default(cuid())
+  code        String     @unique
+  name        String
+  /// Rubrik für die Gruppierung auf der Service-Seite (z. B. "Reparatur",
+  /// "Aufbereitung", "Reinigung").
+  kategorie   String
+  beschreibung String?
+  typ         ServiceTyp @default(ANFRAGE)
+  sortOrder   Int        @default(0)
+  active      Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  preise      ServicePreis[]
+}
+
+/// Festpreis eines Service je Fahrzeugklasse. Nur relevant für typ = FESTPREIS.
+model ServicePreis {
+  id             String       @id @default(cuid())
+  serviceId      String
+  service        Service      @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  vehicleClassId String
+  vehicleClass   VehicleClass @relation(fields: [vehicleClassId], references: [id], onDelete: Cascade)
+  preisCent      Int
+
+  @@unique([serviceId, vehicleClassId])
+}
+
+/// Kundenanfrage für einen oder mehrere Services (typischerweise ANFRAGE-Leistungen).
+model ServiceAnfrage {
+  id           String   @id @default(cuid())
+  name         String
+  email        String
+  telefon      String?
+  kennzeichen  String?
+  fahrzeug     String?
+  wunschtermin String?
+  /// Welche Leistungen der Kunde angefragt hat (freier Text/Liste).
+  leistungen   String
+  nachricht    String?
+  status       String   @default("NEU") // NEU | IN_BEARBEITUNG | ERLEDIGT | ABGELEHNT
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([status, createdAt])
 }
 
 enum VoucherTyp {

@@ -205,3 +205,60 @@ export async function sendeUebergabeprotokoll(params: {
     [{ filename: datei, content: params.pdf }]
   );
 }
+
+/** HTML-Sonderzeichen in Freitext maskieren (Anfragen enthalten Nutzereingaben). */
+function esc(s: string | null | undefined): string {
+  if (!s) return "";
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/** Neue FlySpot-Service-Anfrage ans Team melden. */
+export async function sendeServiceAnfrageTeam(params: {
+  an: string;
+  name: string;
+  email: string;
+  telefon?: string | null;
+  kennzeichen?: string | null;
+  fahrzeug?: string | null;
+  wunschtermin?: string | null;
+  leistungen: string;
+  nachricht?: string | null;
+  erstelltAm: Date;
+}) {
+  const html = baseLayout(`
+    <h2 style="font-size: 17px; margin: 0 0 4px;">Neue Service-Anfrage</h2>
+    <p style="color:#666; margin-top:0;">Eingegangen am ${formatDatum.format(params.erstelltAm)} Uhr.</p>
+    <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+      ${zeile("Name", esc(params.name), true)}
+      ${zeile("E-Mail", esc(params.email))}
+      ${zeile("Telefon", esc(params.telefon) || "–")}
+      ${zeile("Kennzeichen", esc(params.kennzeichen) || "–")}
+      ${zeile("Fahrzeug", esc(params.fahrzeug) || "–")}
+      ${zeile("Wunschtermin", esc(params.wunschtermin) || "–")}
+      ${zeile("Leistungen", esc(params.leistungen))}
+    </table>
+    ${params.nachricht ? `<p style="margin:0 0 4px;color:#666;">Nachricht:</p><p style="margin-top:0;white-space:pre-wrap;">${esc(params.nachricht)}</p>` : ""}
+    <p style="font-size:13px;color:#666;">Die Anfrage ist auch im Admin unter „Service-Anfragen“ sichtbar.</p>
+  `);
+  await sende(params.an, `Service-Anfrage von ${params.name}`, html);
+}
+
+/** Eingangsbestätigung an den Kunden. */
+export async function sendeServiceAnfrageKunde(params: {
+  an: string;
+  name: string;
+  leistungen: string;
+}) {
+  const html = baseLayout(`
+    <p>Hallo ${esc(params.name)},</p>
+    <p>vielen Dank für Ihre Anfrage bei FlySpot Service. Wir haben folgende Leistungen erhalten:</p>
+    <p style="font-weight:bold;">${esc(params.leistungen)}</p>
+    <p>Wir prüfen Ihre Anfrage und melden uns zeitnah mit einem persönlichen Angebot bei Ihnen.</p>
+    <p>Ihr FlySpot-Team</p>
+  `);
+  await sende(params.an, "Ihre Anfrage bei FlySpot Service", html);
+}

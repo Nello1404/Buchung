@@ -15,6 +15,7 @@ const navLinks = [
   { href: "/#ablauf", hash: "ablauf", label: "So funktioniert's" },
   { href: "/#preise", hash: "preise", label: "Preise" },
   { href: "/#einblicke", hash: "einblicke", label: "Einblicke" },
+  { href: "/service", hash: "", label: "Service" },
   { href: "/stornieren", hash: "", label: "Stornieren" },
 ];
 

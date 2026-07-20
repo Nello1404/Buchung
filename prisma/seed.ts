@@ -210,6 +210,123 @@ async function main() {
     });
   }
 
+  // FlySpot Service – Rundum-Serviceangebot fürs Fahrzeug (Startkatalog, im Admin
+  // pflegbar). FESTPREIS-Leistungen haben je Fahrzeugklasse einen Preis und sind
+  // grundsätzlich online buchbar; ANFRAGE-Leistungen werden individuell per
+  // Angebot abgewickelt (Kunde stellt Anfrage, Team meldet sich).
+  const services: {
+    code: string;
+    name: string;
+    kategorie: string;
+    beschreibung: string | null;
+    typ: "FESTPREIS" | "ANFRAGE";
+    sortOrder: number;
+    preise?: { kleinwagen: number; mittelklasse: number; suvVan: number };
+  }[] = [
+    {
+      code: "aussenwaesche",
+      name: "Außenwäsche",
+      kategorie: "Reinigung",
+      beschreibung: "Handwäsche außen inkl. Felgen und Trocknen.",
+      typ: "FESTPREIS",
+      sortOrder: 1,
+      preise: { kleinwagen: 2900, mittelklasse: 3400, suvVan: 3900 },
+    },
+    {
+      code: "innenreinigung",
+      name: "Innenreinigung",
+      kategorie: "Reinigung",
+      beschreibung: "Saugen, Staub, Scheiben innen, Kunststoffpflege.",
+      typ: "FESTPREIS",
+      sortOrder: 2,
+      preise: { kleinwagen: 3900, mittelklasse: 4500, suvVan: 5200 },
+    },
+    {
+      code: "innen-aussen",
+      name: "Innen- & Außenreinigung",
+      kategorie: "Reinigung",
+      beschreibung: "Komplettreinigung innen und außen aus einer Hand.",
+      typ: "FESTPREIS",
+      sortOrder: 3,
+      preise: { kleinwagen: 5900, mittelklasse: 6900, suvVan: 7900 },
+    },
+    {
+      code: "politur",
+      name: "Politur",
+      kategorie: "Aufbereitung",
+      beschreibung: "Lackpolitur für frischen Glanz und Schutz.",
+      typ: "FESTPREIS",
+      sortOrder: 4,
+      preise: { kleinwagen: 12900, mittelklasse: 14900, suvVan: 17900 },
+    },
+    {
+      code: "detailing",
+      name: "Detailing (Komplettaufbereitung)",
+      kategorie: "Aufbereitung",
+      beschreibung: "Umfassende Innen- und Außenaufbereitung nach Zustand – Preis auf Anfrage.",
+      typ: "ANFRAGE",
+      sortOrder: 5,
+    },
+    {
+      code: "smart-repair-kratzer",
+      name: "Kratzer & Lackschäden (Smart Repair)",
+      kategorie: "Reparatur",
+      beschreibung: "Ausbesserung kleiner Kratzer und Lackschäden – Preis nach Begutachtung.",
+      typ: "ANFRAGE",
+      sortOrder: 6,
+    },
+    {
+      code: "smart-repair-dellen",
+      name: "Dellen & Beulen (Smart Repair)",
+      kategorie: "Reparatur",
+      beschreibung: "Schonende Dellenentfernung ohne Lackieren, wo möglich – Preis nach Begutachtung.",
+      typ: "ANFRAGE",
+      sortOrder: 7,
+    },
+    {
+      code: "glasreparatur",
+      name: "Steinschlag & Glasreparatur",
+      kategorie: "Reparatur",
+      beschreibung: "Reparatur kleiner Steinschläge in der Frontscheibe – Preis nach Begutachtung.",
+      typ: "ANFRAGE",
+      sortOrder: 8,
+    },
+  ];
+
+  for (const s of services) {
+    const saved = await prisma.service.upsert({
+      where: { code: s.code },
+      update: {
+        name: s.name,
+        kategorie: s.kategorie,
+        beschreibung: s.beschreibung,
+        typ: s.typ,
+        sortOrder: s.sortOrder,
+      },
+      create: {
+        code: s.code,
+        name: s.name,
+        kategorie: s.kategorie,
+        beschreibung: s.beschreibung,
+        typ: s.typ,
+        sortOrder: s.sortOrder,
+      },
+    });
+    if (s.preise) {
+      for (const [klasse, preisCent] of [
+        [kleinwagen, s.preise.kleinwagen],
+        [mittelklasse, s.preise.mittelklasse],
+        [suvVan, s.preise.suvVan],
+      ] as const) {
+        await prisma.servicePreis.upsert({
+          where: { serviceId_vehicleClassId: { serviceId: saved.id, vehicleClassId: klasse.id } },
+          update: { preisCent },
+          create: { serviceId: saved.id, vehicleClassId: klasse.id, preisCent },
+        });
+      }
+    }
+  }
+
   // Demo-Kunde + Gutschein zum lokalen Testen der Gutschein-Einlösung.
   const demoCustomer = await prisma.customer.upsert({
     where: { email: "test@example.com" },
