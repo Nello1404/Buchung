@@ -31,18 +31,42 @@ function sicherGleich(a: string, b: string): boolean {
 }
 
 /**
- * Prüft die Zugangsdaten des Inhaber-Kontos gegen die Umgebungsvariablen
- * ADMIN_EMAIL / ADMIN_PASSWORD. Das Passwort liegt ausschließlich als
- * Vercel-Umgebungsvariable vor (nie im Code oder in der Datenbank).
+ * Sammelt alle konfigurierten Admin-Zugänge aus den Umgebungsvariablen:
+ * ADMIN_EMAIL / ADMIN_PASSWORD (Admin 1, rückwärtskompatibel) sowie optional
+ * ADMIN2_EMAIL / ADMIN2_PASSWORD, ADMIN3_EMAIL / ADMIN3_PASSWORD usw. Passwörter
+ * liegen ausschließlich als Vercel-Umgebungsvariablen vor (nie im Code/DB).
+ * Beliebig viele Admins können sich parallel auf eigenen Geräten anmelden.
+ */
+function ladeAdminZugaenge(): { email: string; passwort: string }[] {
+  const zugaenge: { email: string; passwort: string }[] = [];
+
+  const ersteEmail = process.env.ADMIN_EMAIL;
+  const erstesPasswort = process.env.ADMIN_PASSWORD;
+  if (ersteEmail && erstesPasswort) {
+    zugaenge.push({ email: ersteEmail.trim().toLowerCase(), passwort: erstesPasswort });
+  }
+
+  for (let i = 2; i <= 10; i++) {
+    const email = process.env[`ADMIN${i}_EMAIL`];
+    const passwort = process.env[`ADMIN${i}_PASSWORD`];
+    if (email && passwort) {
+      zugaenge.push({ email: email.trim().toLowerCase(), passwort });
+    }
+  }
+
+  return zugaenge;
+}
+
+/**
+ * Prüft die Zugangsdaten gegen die konfigurierten Admin-Konten und (separat)
+ * das Fahrer-Konto. Der zeitkonstante Vergleich schützt vor Timing-Angriffen.
  */
 export function pruefeLogin(email: string, passwort: string): Session | null {
   const eMail = email.trim().toLowerCase();
 
-  const adminEmail = process.env.ADMIN_EMAIL;
-  const adminPasswort = process.env.ADMIN_PASSWORD;
-  if (adminEmail && adminPasswort) {
-    if (sicherGleich(eMail, adminEmail.trim().toLowerCase()) && sicherGleich(passwort, adminPasswort)) {
-      return { email: adminEmail.trim().toLowerCase(), rolle: "ADMIN" };
+  for (const admin of ladeAdminZugaenge()) {
+    if (sicherGleich(eMail, admin.email) && sicherGleich(passwort, admin.passwort)) {
+      return { email: admin.email, rolle: "ADMIN" };
     }
   }
 
