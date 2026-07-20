@@ -1,16 +1,22 @@
 import Link from "next/link";
+import Image from "next/image";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { Galerie } from "@/components/Galerie";
 import { Bewertungen } from "@/components/Bewertungen";
 import { BrandLogo } from "@/components/BrandLogo";
 import { ScrollReveal } from "@/components/ScrollReveal";
+import { centZuEUR } from "@/lib/format";
+import { abPreiseProProdukt, heroBild } from "@/lib/home-data";
 
 // Startseite alle 5 Minuten neu generieren (Galerie-Bilder aus der DB), damit die
 // Seite statisch/schnell bleibt und die Datenbank nicht bei jedem Aufruf trifft.
 export const revalidate = 300;
 
-export default function Home() {
+export default async function Home() {
+  const [abPreise, heroUrl] = await Promise.all([abPreiseProProdukt(), heroBild()]);
+  const abText = (cent?: number) => (cent != null ? `ab ${centZuEUR(cent)}/Tag` : null);
+
   return (
     <div className="flex flex-1 flex-col">
       <ScrollReveal />
@@ -18,10 +24,19 @@ export default function Home() {
 
       {/* Hero */}
       <section className="hero-bg relative overflow-hidden">
-        {/* Echtes Logo groß als Erkennungsmerkmal (ab großen Bildschirmen) */}
-        <div className="pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 lg:block xl:right-10">
-          <BrandLogo href={null} imgClassName="h-[24rem] w-auto opacity-90 xl:h-[28rem]" />
-        </div>
+        {/* Optionales Hero-Bild mit dunkler Überblendung (sobald ein Bild gepflegt ist) */}
+        {heroUrl && (
+          <div className="pointer-events-none absolute inset-0">
+            <Image src={heroUrl} alt="" fill priority className="object-cover opacity-30" sizes="100vw" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#0d0f13] via-[#0d0f13cc] to-transparent" />
+          </div>
+        )}
+        {/* Echtes Logo groß als Erkennungsmerkmal (ab großen Bildschirmen, nur ohne Hero-Bild) */}
+        {!heroUrl && (
+          <div className="pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 lg:block xl:right-10">
+            <BrandLogo href={null} imgClassName="h-[24rem] w-auto opacity-90 xl:h-[28rem]" />
+          </div>
+        )}
         <div className="relative mx-auto max-w-6xl px-6 pb-24 pt-36 sm:pt-44">
           <div className="max-w-2xl">
             <p className="eyebrow hero-rise hero-rise-1">Flughafen Frankfurt · Valet &amp; Shuttle</p>
@@ -57,6 +72,28 @@ export default function Home() {
               ))}
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Vertrauens-Leiste – echte, überprüfbare Zusagen (keine erfundenen Zahlen) */}
+      <section className="border-y border-line bg-surface/40">
+        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-px overflow-hidden md:grid-cols-4">
+          {[
+            { icon: terminalIcon, titel: "Direkt am Terminal", text: "Übergabe ohne Umweg" },
+            { icon: shieldIcon, titel: "Vollständig versichert", text: "Gesichertes Gelände" },
+            { icon: clockIcon, titel: "Pünktlich zur Landung", text: "Wir tracken Ihren Flug" },
+            { icon: lockIcon, titel: "Sichere Zahlung", text: "SSL · Stripe · Karte" },
+          ].map((v) => (
+            <div key={v.titel} className="flex items-center gap-3 px-6 py-6">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-line-gold text-gold">
+                {v.icon}
+              </span>
+              <div>
+                <div className="text-sm font-medium text-ink">{v.titel}</div>
+                <div className="text-xs text-subtle">{v.text}</div>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -113,6 +150,9 @@ export default function Home() {
             </span>
             <span className="text-gold">{keyIcon}</span>
             <h3 className="mt-4 font-serif text-2xl font-semibold text-ink">Valet – Hol &amp; Bring</h3>
+            {abText(abPreise.VALET) && (
+              <p className="mt-1 font-serif text-lg text-gold-gradient">{abText(abPreise.VALET)}</p>
+            )}
             <p className="mt-3 text-sm leading-relaxed text-muted">
               Der bequemste Weg: Sie fahren direkt ans Terminal, wir übernehmen Ihr Auto und stellen
               es bei Rückkehr wieder bereit. Kein Umweg, kein Shuttle.
@@ -131,6 +171,9 @@ export default function Home() {
           <div className="card lift p-8" data-reveal data-delay="2">
             <span className="text-gold">{vanIcon}</span>
             <h3 className="mt-4 font-serif text-2xl font-semibold text-ink">Shuttle – Selbstanfahrt</h3>
+            {abText(abPreise.SHUTTLE) && (
+              <p className="mt-1 font-serif text-lg text-gold-gradient">{abText(abPreise.SHUTTLE)}</p>
+            )}
             <p className="mt-3 text-sm leading-relaxed text-muted">
               Die clevere Wahl: Sie parken selbst auf unserem bewachten Platz und werden im komfortablen
               Van zum Terminal gebracht – zum günstigeren Tarif.
@@ -219,7 +262,15 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Platzhalter, damit die feste Buchen-Leiste (mobil) nichts überdeckt */}
+      <div className="h-20 md:hidden" />
+
       <SiteFooter />
+
+      {/* Feste Buchen-Leiste – nur mobil, für schnelle Conversion */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-[#0d0f13]/95 px-4 py-3 backdrop-blur md:hidden">
+        <Link href="/buchen" className="btn-gold w-full">Parkplatz buchen</Link>
+      </div>
     </div>
   );
 }
@@ -250,4 +301,7 @@ const euroIcon = (
 );
 const checkIcon = (
   <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 10l4 4 8-9" strokeLinecap="round" strokeLinejoin="round" /></svg>
+);
+const lockIcon = (
+  <svg viewBox="0 0 24 24" {...iconProps}><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 018 0v3" strokeLinecap="round" strokeLinejoin="round" /></svg>
 );
