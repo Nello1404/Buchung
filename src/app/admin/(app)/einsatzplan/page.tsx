@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { getSession } from "@/lib/auth";
 import { EinsatzplanEditor } from "@/components/admin/EinsatzplanEditor";
+import { PageHeader } from "@/components/admin/PageHeader";
 
 export const metadata = { title: "Einsatzplanung – FlySpot Valet" };
 
@@ -18,12 +19,10 @@ export default async function EinsatzplanPage() {
 
   return (
     <div>
-      <h1 className="font-serif text-2xl font-semibold text-ink">Einsatzplanung</h1>
-      <p className="mt-1 max-w-2xl text-sm text-muted">
-        Planen Sie die Schichten Ihres Teams pro Woche oder Monat. Über „Plan versenden“ erhalten alle
-        Mitarbeiter mit hinterlegter E-Mail ihren persönlichen Plan; alternativ abonnieren sie ihren
-        Kalender dauerhaft (Google, Apple, Outlook) über „Kalender abonnieren“.
-      </p>
+      <PageHeader
+        titel="Einsatzplanung"
+        beschreibung="Schichten pro Woche oder Monat planen. „Plan versenden“ schickt jedem Mitarbeiter mit E-Mail seinen Plan; alternativ Kalender abonnieren (Google, Apple, Outlook)."
+      />
 
       <EinsatzplanEditor basisUrl={basisUrl} />
     </div>

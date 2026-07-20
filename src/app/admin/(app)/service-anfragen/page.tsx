@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { ServiceAnfragenListe } from "@/components/admin/ServiceAnfragenListe";
+import { PageHeader } from "@/components/admin/PageHeader";
 
 export default async function ServiceAnfragenPage() {
   const session = await getSession();
@@ -17,15 +18,10 @@ export default async function ServiceAnfragenPage() {
 
   return (
     <div>
-      <h1 className="font-serif text-2xl font-semibold text-ink">Service-Anfragen</h1>
-      <p className="mt-1 text-sm text-muted">
-        Kundenanfragen zu FlySpot Service.{" "}
-        {offen > 0 ? (
-          <span className="text-gold">{offen} neue Anfrage{offen === 1 ? "" : "n"}.</span>
-        ) : (
-          "Aktuell keine neuen Anfragen."
-        )}
-      </p>
+      <PageHeader
+        titel="Service-Anfragen"
+        beschreibung={offen > 0 ? `${offen} neue Anfrage${offen === 1 ? "" : "n"} · Kundenanfragen zu FlySpot Service.` : "Kundenanfragen zu FlySpot Service. Aktuell keine neuen Anfragen."}
+      />
 
       <ServiceAnfragenListe
         anfragen={anfragen.map((a) => ({

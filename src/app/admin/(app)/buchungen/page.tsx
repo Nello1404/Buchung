@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { centZuEUR, formatDatumZeit, formatUhrzeit } from "@/lib/format";
 import { berlinKalendertag } from "@/lib/date";
 import { StatusBadge } from "@/components/admin/StatusBadge";
+import { PageHeader } from "@/components/admin/PageHeader";
 import type { Prisma } from "@/generated/prisma/client";
 
 export default async function BuchungenPage({
@@ -50,13 +51,11 @@ export default async function BuchungenPage({
 
   return (
     <div>
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="font-serif text-2xl font-semibold text-ink">Buchungen</h1>
-          <p className="mt-1 text-sm text-muted">Tagesgeschäft und alle Buchungen im Überblick.</p>
-        </div>
-        <Link href="/admin/manuell" className="btn-gold !px-4 !py-2 text-sm">+ Neue Buchung</Link>
-      </div>
+      <PageHeader
+        titel="Buchungen"
+        beschreibung="Tagesgeschäft und alle Buchungen im Überblick."
+        aktion={<Link href="/admin/manuell" className="btn-gold !px-4 !py-2 text-sm">+ Neue Buchung</Link>}
+      />
 
       {!suche && (
         <div className="mt-8 grid gap-6 lg:grid-cols-2">

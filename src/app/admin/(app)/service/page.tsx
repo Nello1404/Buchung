@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { ServiceKatalog } from "@/components/admin/ServiceKatalog";
+import { PageHeader } from "@/components/admin/PageHeader";
 
 export default async function ServicePage() {
   const session = await getSession();
@@ -18,12 +19,10 @@ export default async function ServicePage() {
 
   return (
     <div>
-      <h1 className="font-serif text-2xl font-semibold text-ink">FlySpot Service – Katalog</h1>
-      <p className="mt-1 max-w-2xl text-sm text-muted">
-        Rundum-Serviceangebot fürs Fahrzeug. Festpreis-Leistungen haben je Fahrzeugklasse einen
-        Preis; Leistungen „auf Anfrage“ werden individuell per Angebot abgewickelt. Alles hier
-        Angelegte erscheint auf der öffentlichen Seite <span className="font-mono text-gold">/service</span>.
-      </p>
+      <PageHeader
+        titel="FlySpot Service – Katalog"
+        beschreibung="Rundum-Serviceangebot fürs Fahrzeug. Festpreis-Leistungen haben je Fahrzeugklasse einen Preis; „auf Anfrage“ läuft per Angebot. Alles Angelegte erscheint auf /service."
+      />
 
       <ServiceKatalog
         services={services.map((s) => ({
