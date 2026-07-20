@@ -19,6 +19,7 @@ export function SiteFooter() {
               <h3 className="mb-3 font-medium text-ink">Service</h3>
               <ul className="space-y-2 text-muted">
                 <li><Link href="/buchen" className="transition-colors hover:text-gold">Parkplatz buchen</Link></li>
+                <li><Link href="/service" className="transition-colors hover:text-gold">FlySpot Service</Link></li>
                 <li><Link href="/stornieren" className="transition-colors hover:text-gold">Buchung stornieren</Link></li>
                 <li><Link href="/#ablauf" className="transition-colors hover:text-gold">So funktioniert&apos;s</Link></li>
               </ul>

@@ -121,7 +121,8 @@ export async function POST(request: Request) {
           addons: angebot.addonRows.length
             ? {
                 create: angebot.addonRows.map((a) => ({
-                  serviceAddonId: a.id,
+                  serviceAddonId: a.serviceAddonId,
+                  serviceId: a.serviceId,
                   preisCentSnapshot: a.preisCent,
                   nameSnapshot: a.name,
                 })),

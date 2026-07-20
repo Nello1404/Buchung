@@ -84,6 +84,7 @@ model VehicleClass {
   tariffRules       TariffRule[]
   seasonRates       SeasonRate[]
   addonPrices       ServiceAddonPrice[]
+  servicePreise     ServicePreis[]
   vehicles          Vehicle[]
 }
 
@@ -182,17 +183,83 @@ model ServiceAddonPrice {
 }
 
 model BookingAddon {
-  id             String       @id @default(cuid())
+  id             String        @id @default(cuid())
   bookingId      String
-  booking        Booking      @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  serviceAddonId String
-  serviceAddon   ServiceAddon @relation(fields: [serviceAddonId], references: [id])
+  booking        Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  /// Herkunft der Zusatzleistung: entweder ein Buchungs-Zusatzservice (ServiceAddon)
+  /// ODER eine Festpreis-Leistung aus dem FlySpot-Service-Katalog (Service). Genau
+  /// eines von beiden ist gesetzt; Name und Preis werden ohnehin als Snapshot gehalten.
+  serviceAddonId String?
+  serviceAddon   ServiceAddon? @relation(fields: [serviceAddonId], references: [id])
+  serviceId      String?
+  service        Service?      @relation(fields: [serviceId], references: [id])
   /// Preis zum Buchungszeitpunkt (Snapshot) – spätere Preisänderungen im Admin
   /// wirken sich nicht rückwirkend auf bestehende Buchungen aus.
   preisCentSnapshot Int
   nameSnapshot      String
 
   @@index([bookingId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  FlySpot Service – Rundum-Serviceangebot rund ums Fahrzeug (Smart Repair,
+//  Glasreparatur, Dellen, Politur, Detailing, Innen-/Außenreinigung …).
+//  Getrennt von den Buchungs-Zusatzservices (ServiceAddon), weil es ein eigenes
+//  öffentliches Angebot mit Katalog- und Anfrage-Charakter ist.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum ServiceTyp {
+  FESTPREIS // fester Preis je Fahrzeugklasse – online direkt buchbar
+  ANFRAGE   // individuelles Angebot – Kunde stellt Anfrage, Team meldet sich
+}
+
+model Service {
+  id          String     @id @default(cuid())
+  code        String     @unique
+  name        String
+  /// Rubrik für die Gruppierung auf der Service-Seite (z. B. "Reparatur",
+  /// "Aufbereitung", "Reinigung").
+  kategorie   String
+  beschreibung String?
+  typ         ServiceTyp @default(ANFRAGE)
+  sortOrder   Int        @default(0)
+  active      Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  preise        ServicePreis[]
+  bookingAddons BookingAddon[]
+}
+
+/// Festpreis eines Service je Fahrzeugklasse. Nur relevant für typ = FESTPREIS.
+model ServicePreis {
+  id             String       @id @default(cuid())
+  serviceId      String
+  service        Service      @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  vehicleClassId String
+  vehicleClass   VehicleClass @relation(fields: [vehicleClassId], references: [id], onDelete: Cascade)
+  preisCent      Int
+
+  @@unique([serviceId, vehicleClassId])
+}
+
+/// Kundenanfrage für einen oder mehrere Services (typischerweise ANFRAGE-Leistungen).
+model ServiceAnfrage {
+  id           String   @id @default(cuid())
+  name         String
+  email        String
+  telefon      String?
+  kennzeichen  String?
+  fahrzeug     String?
+  wunschtermin String?
+  /// Welche Leistungen der Kunde angefragt hat (freier Text/Liste).
+  leistungen   String
+  nachricht    String?
+  status       String   @default("NEU") // NEU | IN_BEARBEITUNG | ERLEDIGT | ABGELEHNT
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([status, createdAt])
 }
 
 enum VoucherTyp {
