@@ -38,6 +38,27 @@ const inTagen = (n: number) => {
   return d.toISOString().slice(0, 10);
 };
 
+// Konkrete Beispiele je Fahrzeugklasse – macht die Auswahl greifbarer.
+const KLASSE_BEISPIEL: Record<string, string> = {
+  KLEINWAGEN: "z. B. VW Polo, Opel Corsa",
+  MITTELKLASSE: "z. B. VW Golf, 3er BMW",
+  SUV_VAN: "z. B. SUV, Van, Kombi",
+};
+
+const datumFmt = new Intl.DateTimeFormat("de-DE", { day: "2-digit", month: "2-digit" });
+function fmtDatum(iso: string): string {
+  if (!iso) return "–";
+  const [j, m, t] = iso.split("-").map(Number);
+  return datumFmt.format(new Date(j, m - 1, t));
+}
+
+const miniCheck = (
+  <svg viewBox="0 0 20 20" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M4 10l4 4 8-9" strokeLinecap="round" strokeLinejoin="round" /></svg>
+);
+const miniLock = (
+  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.9"><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 018 0v3" strokeLinecap="round" strokeLinejoin="round" /></svg>
+);
+
 export default function BookingWizard() {
   const [step, setStep] = useState(1);
 
@@ -173,11 +194,35 @@ export default function BookingWizard() {
   const schritt1Gueltig =
     !!anreiseDatum && !!abreiseDatum && !!vehicleClassCode && !quoteLoading && !quoteError && !!quote?.verfuegbar;
 
+  // Klartext, warum Schritt 1 noch nicht weitergeht.
+  const schritt1Grund: string | null = !anreiseDatum || !abreiseDatum || !vehicleClassCode
+    ? "Bitte Zeitraum und Fahrzeugklasse wählen."
+    : quoteLoading
+      ? "Preis wird berechnet …"
+      : quoteError
+        ? quoteError
+        : quote && !quote.verfuegbar
+          ? "Für den Zeitraum ist leider kein Platz frei."
+          : null;
+
   const schritt3Gueltig =
     name.trim().length > 1 &&
     /\S+@\S+\.\S+/.test(email) &&
     kennzeichen.trim().length > 1 &&
     (productCode !== "VALET" || rueckflugnummer.trim().length > 0);
+
+  const schritt3Grund: string | null =
+    name.trim().length < 2
+      ? "Bitte Ihren Namen angeben."
+      : !/\S+@\S+\.\S+/.test(email)
+        ? "Bitte eine gültige E-Mail-Adresse angeben."
+        : kennzeichen.trim().length < 2
+          ? "Bitte das Kennzeichen angeben."
+          : productCode === "VALET" && !rueckflugnummer.trim()
+            ? "Bitte die Rückflugnummer angeben (bei Valet Pflicht)."
+            : null;
+
+  const klasseName = vehicleClasses.find((vc) => vc.code === vehicleClassCode)?.name ?? "";
 
   async function handleSubmit() {
     setSubmitting(true);
@@ -215,7 +260,10 @@ export default function BookingWizard() {
 
   return (
     <div className="mx-auto w-full max-w-2xl">
-      <ol className="mb-8 flex items-center justify-between">
+      <p className="mb-2 text-center text-xs font-medium uppercase tracking-wider text-subtle">
+        Schritt {step} von 4 · {schritte[step - 1]}
+      </p>
+      <ol className="mb-6 flex items-center justify-between">
         {schritte.map((label, i) => {
           const nr = i + 1;
           const aktiv = step === nr;
@@ -240,6 +288,22 @@ export default function BookingWizard() {
       </ol>
 
       <div className="card p-6 sm:p-8">
+        {step > 1 && (
+          <div className="mb-6 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-line bg-surface-2 px-4 py-3 text-sm">
+            <span className="font-medium text-ink">{productCode === "VALET" ? "Valet" : "Shuttle"}</span>
+            <span className="text-subtle">·</span>
+            <span className="text-muted">{klasseName}</span>
+            <span className="text-subtle">·</span>
+            <span className="text-muted">
+              {fmtDatum(anreiseDatum)}–{fmtDatum(abreiseDatum)}
+              {quote ? ` (${quote.tage} Tag${quote.tage === 1 ? "" : "e"})` : ""}
+            </span>
+            <button type="button" onClick={() => setStep(1)} className="ml-auto text-xs text-gold hover:underline">
+              ändern
+            </button>
+          </div>
+        )}
+
         {step === 1 && (
           <div className="space-y-7">
             <div>
@@ -277,13 +341,16 @@ export default function BookingWizard() {
                     key={vc.code}
                     type="button"
                     onClick={() => setVehicleClassCode(vc.code)}
-                    className={`rounded-xl border p-3 text-center text-sm transition-colors ${
+                    className={`rounded-xl border p-3 text-center transition-colors ${
                       vehicleClassCode === vc.code
-                        ? "border-line-gold bg-[rgba(200,164,92,0.07)] text-ink"
-                        : "border-line text-muted hover:border-line-gold"
+                        ? "border-line-gold bg-[rgba(200,164,92,0.07)]"
+                        : "border-line hover:border-line-gold"
                     }`}
                   >
-                    {vc.name}
+                    <div className={`text-sm ${vehicleClassCode === vc.code ? "text-ink" : "text-muted"}`}>{vc.name}</div>
+                    {KLASSE_BEISPIEL[vc.code] && (
+                      <div className="mt-0.5 text-[11px] leading-tight text-subtle">{KLASSE_BEISPIEL[vc.code]}</div>
+                    )}
                   </button>
                 ))}
               </div>
@@ -304,10 +371,11 @@ export default function BookingWizard() {
 
             <PreisAnzeige quote={quote} loading={quoteLoading} error={quoteError} />
 
-            <div className="flex justify-end">
+            <div className="flex flex-col items-end gap-2">
               <button type="button" disabled={!schritt1Gueltig} onClick={() => setStep(2)} className="btn-gold">
                 Weiter
               </button>
+              {schritt1Grund && !quoteError && <p className="text-xs text-subtle">{schritt1Grund}</p>}
             </div>
           </div>
         )}
@@ -445,13 +513,16 @@ export default function BookingWizard() {
 
             <PreisAnzeige quote={quote} loading={quoteLoading} error={quoteError} />
 
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3">
               <button type="button" onClick={() => setStep(2)} className="text-sm font-medium text-muted transition-colors hover:text-ink">
                 ← Zurück
               </button>
-              <button type="button" disabled={!schritt3Gueltig} onClick={() => setStep(4)} className="btn-gold">
-                Weiter zur Übersicht
-              </button>
+              <div className="flex flex-col items-end gap-2">
+                <button type="button" disabled={!schritt3Gueltig} onClick={() => setStep(4)} className="btn-gold">
+                  Weiter zur Übersicht
+                </button>
+                {schritt3Grund && <p className="text-right text-xs text-subtle">{schritt3Grund}</p>}
+              </div>
             </div>
           </div>
         )}
@@ -486,9 +557,11 @@ export default function BookingWizard() {
                 {submitting ? "Wird verarbeitet…" : "Jetzt kostenpflichtig buchen"}
               </button>
             </div>
-            <p className="text-center text-xs text-subtle">
-              Sichere Zahlung über Stripe · Kostenlose Stornierung bis 48 Std. vor Anreise
-            </p>
+            <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 border-t border-line pt-4 text-xs text-muted">
+              <span className="inline-flex items-center gap-1.5"><span className="text-gold">{miniCheck}</span> Vollständig versichert</span>
+              <span className="inline-flex items-center gap-1.5"><span className="text-gold">{miniCheck}</span> Kostenlose Stornierung bis 48 Std.</span>
+              <span className="inline-flex items-center gap-1.5"><span className="text-gold">{miniLock}</span> Sichere Zahlung über Stripe</span>
+            </div>
           </div>
         )}
       </div>
