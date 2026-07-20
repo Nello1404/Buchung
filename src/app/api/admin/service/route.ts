@@ -16,6 +16,8 @@ const serviceSchema = z.object({
   kategorie: z.string().min(1).max(80),
   beschreibung: z.string().max(2000).nullish(),
   typ: z.enum(["FESTPREIS", "ANFRAGE"]),
+  inBuchung: z.boolean(),
+  aufServiceSeite: z.boolean(),
   sortOrder: z.number().int().min(0).max(9999),
   active: z.boolean(),
   preise: z.array(preisSchema).default([]),
@@ -58,6 +60,8 @@ export async function POST(request: Request) {
 
   // Nur bei FESTPREIS Preise speichern; ANFRAGE-Leistungen haben keine Festpreise.
   const preise = d.typ === "FESTPREIS" ? d.preise : [];
+  // In der Parkbuchung sind nur Festpreis-Leistungen buchbar.
+  const inBuchung = d.typ === "FESTPREIS" ? d.inBuchung : false;
 
   const service = await prisma.$transaction(async (tx) => {
     const saved = d.id
@@ -69,6 +73,8 @@ export async function POST(request: Request) {
             kategorie: d.kategorie,
             beschreibung: d.beschreibung ?? null,
             typ: d.typ,
+            inBuchung,
+            aufServiceSeite: d.aufServiceSeite,
             sortOrder: d.sortOrder,
             active: d.active,
           },
@@ -80,6 +86,8 @@ export async function POST(request: Request) {
             kategorie: d.kategorie,
             beschreibung: d.beschreibung ?? null,
             typ: d.typ,
+            inBuchung,
+            aufServiceSeite: d.aufServiceSeite,
             sortOrder: d.sortOrder,
             active: d.active,
           },

@@ -294,6 +294,9 @@ async function main() {
   ];
 
   for (const s of services) {
+    // Festpreis-Leistungen sind in beiden Kanälen (Parkbuchung + Service-Seite),
+    // Anfrage-Leistungen nur auf der Service-Seite für Nicht-Parkkunden.
+    const inBuchung = s.typ === "FESTPREIS";
     const saved = await prisma.service.upsert({
       where: { code: s.code },
       update: {
@@ -301,6 +304,8 @@ async function main() {
         kategorie: s.kategorie,
         beschreibung: s.beschreibung,
         typ: s.typ,
+        inBuchung,
+        aufServiceSeite: true,
         sortOrder: s.sortOrder,
       },
       create: {
@@ -309,6 +314,8 @@ async function main() {
         kategorie: s.kategorie,
         beschreibung: s.beschreibung,
         typ: s.typ,
+        inBuchung,
+        aufServiceSeite: true,
         sortOrder: s.sortOrder,
       },
     });

@@ -104,7 +104,7 @@ export async function berechneAngebot(input: QuoteInput) {
       ? prisma.servicePreis.findMany({
           where: {
             vehicleClassId: vehicleClass.id,
-            service: { code: { in: serviceCodes }, active: true, typ: "FESTPREIS" },
+            service: { code: { in: serviceCodes }, active: true, typ: "FESTPREIS", inBuchung: true },
           },
           include: { service: true },
         })

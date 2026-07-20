@@ -21,6 +21,8 @@ interface Service {
   kategorie: string;
   beschreibung: string | null;
   typ: Typ;
+  inBuchung: boolean;
+  aufServiceSeite: boolean;
   sortOrder: number;
   active: boolean;
   preise: Preis[];
@@ -33,6 +35,8 @@ interface FormState {
   kategorie: string;
   beschreibung: string;
   typ: Typ;
+  inBuchung: boolean;
+  aufServiceSeite: boolean;
   sortOrder: string;
   active: boolean;
   preise: Record<string, string>; // vehicleClassId -> Euro-String
@@ -53,6 +57,8 @@ function leererForm(): FormState {
     kategorie: "",
     beschreibung: "",
     typ: "FESTPREIS",
+    inBuchung: true,
+    aufServiceSeite: true,
     sortOrder: "0",
     active: true,
     preise: {},
@@ -69,6 +75,8 @@ function serviceZuForm(s: Service): FormState {
     kategorie: s.kategorie,
     beschreibung: s.beschreibung ?? "",
     typ: s.typ,
+    inBuchung: s.inBuchung,
+    aufServiceSeite: s.aufServiceSeite,
     sortOrder: String(s.sortOrder),
     active: s.active,
     preise,
@@ -109,6 +117,8 @@ export function ServiceKatalog({
           kategorie: form.kategorie.trim(),
           beschreibung: form.beschreibung.trim() || null,
           typ: form.typ,
+          inBuchung: form.inBuchung,
+          aufServiceSeite: form.aufServiceSeite,
           sortOrder: Number(form.sortOrder) || 0,
           active: form.active,
           preise,
@@ -191,8 +201,39 @@ export function ServiceKatalog({
             </label>
             <label className="flex items-center gap-2 self-end pb-2">
               <input type="checkbox" checked={form.active} onChange={(e) => setForm({ ...form, active: e.target.checked })} />
-              <span className="text-sm text-ink">Aktiv (auf der Website sichtbar)</span>
+              <span className="text-sm text-ink">Aktiv (überhaupt sichtbar)</span>
             </label>
+          </div>
+
+          <div className="mt-4 rounded-xl border border-line p-4">
+            <p className="text-sm font-medium text-ink">Wo wird diese Leistung angeboten?</p>
+            <div className="mt-3 space-y-2.5">
+              <label className={`flex items-start gap-2.5 ${form.typ !== "FESTPREIS" ? "opacity-50" : ""}`}>
+                <input
+                  type="checkbox"
+                  disabled={form.typ !== "FESTPREIS"}
+                  checked={form.typ === "FESTPREIS" && form.inBuchung}
+                  onChange={(e) => setForm({ ...form, inBuchung: e.target.checked })}
+                  className="mt-0.5"
+                />
+                <span className="text-sm text-muted">
+                  <span className="text-ink">In der Park-Buchung</span> – Parkkunden wählen die Leistung
+                  während der Buchung mit (nur Festpreis möglich).
+                </span>
+              </label>
+              <label className="flex items-start gap-2.5">
+                <input
+                  type="checkbox"
+                  checked={form.aufServiceSeite}
+                  onChange={(e) => setForm({ ...form, aufServiceSeite: e.target.checked })}
+                  className="mt-0.5"
+                />
+                <span className="text-sm text-muted">
+                  <span className="text-ink">Auf der Service-Seite</span> – auch für Kunden ohne
+                  Parkbuchung sichtbar (Terminanfrage unter <span className="font-mono text-gold">/service</span>).
+                </span>
+              </label>
+            </div>
           </div>
 
           {form.typ === "FESTPREIS" && (
@@ -240,6 +281,7 @@ export function ServiceKatalog({
                       <th className="px-5 py-3 font-medium">Leistung</th>
                       <th className="px-5 py-3 font-medium">Art</th>
                       <th className="px-5 py-3 font-medium">Preise</th>
+                      <th className="px-5 py-3 font-medium">Angeboten</th>
                       <th className="px-5 py-3 font-medium">Status</th>
                       <th className="px-5 py-3 font-medium"></th>
                     </tr>
@@ -260,6 +302,17 @@ export function ServiceKatalog({
                                   .join(" / ")
                               : "—"
                             : "individuell"}
+                        </td>
+                        <td className="px-5 py-3">
+                          <div className="flex flex-wrap gap-1">
+                            {s.inBuchung && (
+                              <span className="rounded-full border border-line-gold px-2 py-0.5 text-xs text-gold">Buchung</span>
+                            )}
+                            {s.aufServiceSeite && (
+                              <span className="rounded-full border border-line px-2 py-0.5 text-xs text-muted">Service-Seite</span>
+                            )}
+                            {!s.inBuchung && !s.aufServiceSeite && <span className="text-xs text-subtle">—</span>}
+                          </div>
                         </td>
                         <td className="px-5 py-3">
                           {s.active ? (

@@ -33,6 +33,8 @@ export default async function ServicePage() {
           kategorie: s.kategorie,
           beschreibung: s.beschreibung,
           typ: s.typ,
+          inBuchung: s.inBuchung,
+          aufServiceSeite: s.aufServiceSeite,
           sortOrder: s.sortOrder,
           active: s.active,
           preise: s.preise.map((p) => ({ vehicleClassId: p.vehicleClassId, preisCent: p.preisCent })),
