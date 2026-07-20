@@ -262,3 +262,38 @@ export async function sendeServiceAnfrageKunde(params: {
   `);
   await sende(params.an, "Ihre Anfrage bei FlySpot Service", html);
 }
+
+/** Persönlichen Einsatzplan (Schichten im Zeitraum) an einen Mitarbeiter senden. */
+export async function sendeEinsatzplan(params: {
+  an: string;
+  name: string;
+  zeitraumLabel: string;
+  schichten: { datumLabel: string; vonZeit: string; bisZeit: string; notiz: string | null }[];
+  feedUrl?: string | null;
+}) {
+  const zeilen = params.schichten.length
+    ? params.schichten
+        .map(
+          (s) => `<tr>
+        <td style="padding:6px 10px 6px 0;color:#666;white-space:nowrap;">${esc(s.datumLabel)}</td>
+        <td style="padding:6px 0;font-weight:bold;white-space:nowrap;">${esc(s.vonZeit)}–${esc(s.bisZeit)} Uhr</td>
+        <td style="padding:6px 0 6px 10px;color:#333;">${esc(s.notiz) || ""}</td>
+      </tr>`
+        )
+        .join("")
+    : `<tr><td colspan="3" style="padding:10px 0;color:#666;">Für diesen Zeitraum sind aktuell keine Einsätze geplant.</td></tr>`;
+
+  const html = baseLayout(`
+    <h2 style="font-size: 17px; margin: 0 0 4px;">Ihr Einsatzplan</h2>
+    <p style="color:#666; margin-top:0;">Hallo ${esc(params.name)}, hier Ihr Plan für ${esc(params.zeitraumLabel)}:</p>
+    <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">${zeilen}</table>
+    ${
+      params.feedUrl
+        ? `<p style="font-size:13px;color:#666;">Tipp: Sie können Ihren Plan dauerhaft im Handy-Kalender abonnieren (Google, Apple, Outlook). Link:<br /><a href="${esc(params.feedUrl)}" style="color:#9c7c38;">${esc(params.feedUrl)}</a></p>`
+        : ""
+    }
+    <p style="font-size:13px;color:#666;">Änderungen vorbehalten. Bei Fragen wenden Sie sich bitte an die Einsatzleitung.</p>
+  `);
+
+  await sende(params.an, `Einsatzplan ${params.zeitraumLabel} · FlySpot Valet`, html);
+}
