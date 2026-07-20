@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-guard";
@@ -97,6 +98,9 @@ export async function POST(request: Request) {
     }
     return saved;
   });
+
+  // Öffentliche Katalogseite sofort neu berechnen, damit Änderungen direkt erscheinen.
+  revalidatePath("/service");
 
   return NextResponse.json({ ok: true, id: service.id });
 }
