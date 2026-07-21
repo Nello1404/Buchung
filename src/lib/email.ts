@@ -87,6 +87,8 @@ export async function sendeBuchungsbestaetigung(params: {
   abreise: Date;
   preisGesamtCent: number;
   flugnummer?: string | null;
+  /** Optionale Rechnung als PDF-Anhang. */
+  rechnungPdf?: Buffer | null;
 }) {
   const { an, bookingNumber, produktName, anreise, abreise, preisGesamtCent, flugnummer } = params;
   const html = baseLayout(`
@@ -107,11 +109,15 @@ export async function sendeBuchungsbestaetigung(params: {
     </table>
 
     <p style="margin:0 0 6px; font-weight:bold; color:#14171e;">So funktioniert's</p>
-    <p style="margin:0; color:#555;">Bitte fahren Sie zur vereinbarten Zeit direkt zum Valet-/Shuttle-Terminal am Flughafen
+    <p style="margin:0 0 4px; color:#555;">Bitte fahren Sie zur vereinbarten Zeit direkt zum Valet-/Shuttle-Terminal am Flughafen
     Frankfurt und nennen Sie Ihre Buchungsnummer. Unser Team empfängt Sie dort. Eine kostenlose
     Stornierung ist bis 48 Stunden vor Anreise möglich (danach 50 % Erstattung).</p>
+    ${params.rechnungPdf ? `<p style="margin:14px 0 0; color:#555;">Ihre Rechnung finden Sie im PDF-Anhang dieser E-Mail.</p>` : ""}
   `);
-  await sende(an, `Buchungsbestätigung ${bookingNumber} – FlySpot Valet`, html);
+  const anhaenge = params.rechnungPdf
+    ? [{ filename: `Rechnung-${bookingNumber}.pdf`, content: params.rechnungPdf }]
+    : undefined;
+  await sende(an, `Buchungsbestätigung ${bookingNumber} – FlySpot Valet`, html, anhaenge);
 }
 
 export async function sendeStornoBestaetigung(params: {

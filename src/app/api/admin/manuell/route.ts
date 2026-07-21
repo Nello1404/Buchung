@@ -11,6 +11,7 @@ import { KapazitaetError, reserviereKapazitaet } from "@/lib/capacity";
 import { KeinTarifError, SperrtagError } from "@/lib/pricing";
 import { prisma } from "@/lib/prisma";
 import { sendeBuchungsbestaetigung } from "@/lib/email";
+import { baueRechnungsPdfFuerBuchung } from "@/lib/invoice";
 
 export async function POST(request: Request) {
   const guard = await requireAdmin();
@@ -151,6 +152,12 @@ export async function POST(request: Request) {
 
     // Bestätigung nur, wenn eine echte E-Mail vorliegt.
     if (email) {
+      let rechnungPdf: Buffer | null = null;
+      try {
+        rechnungPdf = await baueRechnungsPdfFuerBuchung(booking.id);
+      } catch (e) {
+        console.error("Rechnung-PDF für Bestätigungsmail fehlgeschlagen:", e);
+      }
       await sendeBuchungsbestaetigung({
         an: email,
         bookingNumber: booking.bookingNumber,
@@ -159,6 +166,7 @@ export async function POST(request: Request) {
         abreise: booking.abreise,
         preisGesamtCent: booking.preisGesamtCent,
         flugnummer: booking.rueckflugnummer,
+        rechnungPdf,
       });
     }
 

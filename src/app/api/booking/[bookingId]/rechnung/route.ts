@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { erzeugeRechnungsPdf } from "@/lib/invoice";
+import { baueRechnungsPdfFuerBuchung } from "@/lib/invoice";
 
 export async function GET(
   _request: Request,
@@ -8,36 +8,17 @@ export async function GET(
 ) {
   const { bookingId } = await params;
 
-  const booking = await prisma.booking.findUnique({
-    where: { id: bookingId },
-    include: { customer: true, product: true, addons: true },
-  });
-
-  if (!booking || booking.status === "ANGEFRAGT" || booking.status === "STORNIERT") {
+  const pdf = await baueRechnungsPdfFuerBuchung(bookingId);
+  if (!pdf) {
     return NextResponse.json({ error: "Rechnung nicht verfügbar." }, { status: 404 });
   }
 
-  const positionen = [
-    { bezeichnung: `${booking.product.name} – Parkgebühr`, preisCent: booking.preisTageCent },
-    ...booking.addons.map((a) => ({ bezeichnung: a.nameSnapshot, preisCent: a.preisCentSnapshot })),
-  ];
-  if (booking.gutscheinRabattCent > 0) {
-    positionen.push({ bezeichnung: "Treue-Gutschein", preisCent: -booking.gutscheinRabattCent });
-  }
+  const booking = await prisma.booking.findUnique({ where: { id: bookingId }, select: { bookingNumber: true } });
 
-  const pdf = await erzeugeRechnungsPdf({
-    bookingNumber: booking.bookingNumber,
-    rechnungsdatum: booking.updatedAt,
-    kundeName: booking.customer.name,
-    kundeEmail: booking.customer.email,
-    positionen,
-    preisGesamtCent: booking.preisGesamtCent,
-  });
-
-  return new NextResponse(Buffer.from(pdf), {
+  return new NextResponse(new Uint8Array(pdf), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="Rechnung-${booking.bookingNumber}.pdf"`,
+      "Content-Disposition": `attachment; filename="Rechnung-${booking?.bookingNumber ?? bookingId}.pdf"`,
     },
   });
 }

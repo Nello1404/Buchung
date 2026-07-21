@@ -1,4 +1,5 @@
 import { PDFDocument, StandardFonts } from "pdf-lib";
+import { prisma } from "@/lib/prisma";
 import { centZuEUR } from "@/lib/format";
 import { ustAusweis } from "@/lib/pricing";
 import {
@@ -26,6 +27,37 @@ export interface RechnungsDaten {
 }
 
 const formatDatum = new Intl.DateTimeFormat("de-DE", { timeZone: "Europe/Berlin", dateStyle: "long" });
+
+/**
+ * Lädt eine Buchung und erzeugt die Rechnung als PDF (Buffer). Gibt null zurück,
+ * wenn keine Rechnung möglich ist (Buchung fehlt, noch nicht bestätigt oder
+ * storniert). Wird sowohl vom Download als auch vom E-Mail-Versand genutzt.
+ */
+export async function baueRechnungsPdfFuerBuchung(bookingId: string): Promise<Buffer | null> {
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    include: { customer: true, product: true, addons: true },
+  });
+  if (!booking || booking.status === "ANGEFRAGT" || booking.status === "STORNIERT") return null;
+
+  const positionen: RechnungsPosition[] = [
+    { bezeichnung: `${booking.product.name} – Parkgebühr`, preisCent: booking.preisTageCent },
+    ...booking.addons.map((a) => ({ bezeichnung: a.nameSnapshot, preisCent: a.preisCentSnapshot })),
+  ];
+  if (booking.gutscheinRabattCent > 0) {
+    positionen.push({ bezeichnung: "Treue-Gutschein", preisCent: -booking.gutscheinRabattCent });
+  }
+
+  const pdf = await erzeugeRechnungsPdf({
+    bookingNumber: booking.bookingNumber,
+    rechnungsdatum: booking.updatedAt,
+    kundeName: booking.customer.name,
+    kundeEmail: booking.customer.email,
+    positionen,
+    preisGesamtCent: booking.preisGesamtCent,
+  });
+  return Buffer.from(pdf);
+}
 
 export async function erzeugeRechnungsPdf(daten: RechnungsDaten): Promise<Uint8Array> {
   const doc = await PDFDocument.create();
@@ -91,13 +123,15 @@ export async function erzeugeRechnungsPdf(daten: RechnungsDaten): Promise<Uint8A
   summenzeile("Nettobetrag", centZuEUR(nettoCent));
   summenzeile("zzgl. 19 % USt.", centZuEUR(ustCent));
 
-  // Gesamtbetrag – hervorgehobene Gold-Box
-  y -= 2;
-  const boxH = 34;
-  seite.drawRectangle({ x: betragX - 150, y: y - boxH + 22, width: rechts - (betragX - 150), height: boxH, color: PDF_GOLD_BG });
-  seite.drawText("Gesamtbetrag", { x: betragX - 138, y: y + 2, size: 12, font: fontBold, color: PDF_INK });
+  // Gesamtbetrag – hervorgehobene Gold-Box, klar unterhalb der USt-Zeile.
+  y -= 14;
+  const boxH = 32;
+  const boxX = betragX - 150;
+  seite.drawRectangle({ x: boxX, y: y - boxH, width: rechts - boxX, height: boxH, color: PDF_GOLD_BG });
+  const mitteY = y - boxH / 2 - 4;
+  seite.drawText("Gesamtbetrag", { x: boxX + 12, y: mitteY, size: 12, font: fontBold, color: PDF_INK });
   const gesamt = centZuEUR(bruttoCent);
-  seite.drawText(gesamt, { x: rechts - 12 - fontBold.widthOfTextAtSize(gesamt, 13), y: y + 1, size: 13, font: fontBold, color: PDF_GOLD });
+  seite.drawText(gesamt, { x: rechts - 12 - fontBold.widthOfTextAtSize(gesamt, 13), y: mitteY - 0.5, size: 13, font: fontBold, color: PDF_GOLD });
 
   zeichneMarkenfuss(seite, font, {
     links,
