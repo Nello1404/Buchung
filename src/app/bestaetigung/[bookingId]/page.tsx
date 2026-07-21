@@ -71,6 +71,12 @@ export default async function BestaetigungPage({
               Stunden vor Anreise möglich.
             </div>
 
+            <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted">
+              <span className="inline-flex items-center gap-1.5 text-gold">✓ <span className="text-muted">Vollständig versichert</span></span>
+              <span className="inline-flex items-center gap-1.5 text-gold">✓ <span className="text-muted">Pünktlich zur Landung</span></span>
+              <span className="inline-flex items-center gap-1.5 text-gold">✓ <span className="text-muted">Direkt am Terminal</span></span>
+            </div>
+
             <div className="mt-7 flex items-center justify-between">
               <Link href="/" className="text-sm font-medium text-muted transition-colors hover:text-ink">
                 ← Zur Startseite

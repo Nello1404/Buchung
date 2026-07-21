@@ -58,19 +58,24 @@ function isoZuDatum(iso: string): Date {
 
 function baseLayout(inhalt: string) {
   return `
-  <div style="font-family: Arial, Helvetica, sans-serif; max-width: 560px; margin: 0 auto; color: #1a1a1a;">
-    <div style="border-bottom: 2px solid #c8a45c; padding-bottom: 10px; margin-bottom: 20px;">
-      <span style="font-size: 22px; font-weight: 700; letter-spacing: 1px;">
-        <span style="color: #9c7c38;">FLY</span><span style="color: #7a7f88;">SPOT</span>
-      </span>
-      <span style="font-size: 12px; letter-spacing: 4px; color: #9c7c38; margin-left: 6px;">VALET</span>
+  <div style="background:#f4f2ee; padding:24px 0; font-family: Arial, Helvetica, sans-serif;">
+    <div style="max-width: 560px; margin: 0 auto; background:#ffffff; border:1px solid #e7e3da; border-radius:14px; overflow:hidden;">
+      <div style="background:#14171e; padding:22px 28px;">
+        <span style="font-size: 22px; font-weight: 700; letter-spacing: 1px;">
+          <span style="color: #d3b877;">FlySpot</span><span style="color: #9aa0a8;"> Valet</span>
+        </span>
+        <div style="height:2px; width:44px; background:#c8a45c; margin-top:10px;"></div>
+      </div>
+      <div style="padding: 26px 28px; color:#1a1a1a; line-height:1.55;">
+        ${inhalt}
+      </div>
+      <div style="border-top:1px solid #eee; padding:16px 28px; background:#faf9f6;">
+        <p style="font-size: 12px; color: #8a8a8a; margin:0;">
+          FlySpot Valet · Flughafen Frankfurt · www.flyspot-valet.de<br />
+          Diese E-Mail wurde automatisch generiert.
+        </p>
+      </div>
     </div>
-    ${inhalt}
-    <hr style="margin-top: 32px; border: none; border-top: 1px solid #ddd;" />
-    <p style="font-size: 12px; color: #666;">
-      FlySpot Valet · Flughafen Frankfurt · www.flyspot-valet.de<br />
-      Diese E-Mail wurde automatisch generiert.
-    </p>
   </div>`;
 }
 
@@ -85,19 +90,26 @@ export async function sendeBuchungsbestaetigung(params: {
 }) {
   const { an, bookingNumber, produktName, anreise, abreise, preisGesamtCent, flugnummer } = params;
   const html = baseLayout(`
-    <p>Vielen Dank für Ihre Buchung bei FlySpot Valet!</p>
-    <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
-      <tr><td style="padding:4px 0;color:#666;">Buchungsnummer</td><td style="padding:4px 0;font-weight:bold;">${bookingNumber}</td></tr>
-      <tr><td style="padding:4px 0;color:#666;">Produkt</td><td style="padding:4px 0;">${produktName}</td></tr>
-      <tr><td style="padding:4px 0;color:#666;">Anreise</td><td style="padding:4px 0;">${formatDatum.format(anreise)} Uhr</td></tr>
-      <tr><td style="padding:4px 0;color:#666;">Abreise</td><td style="padding:4px 0;">${formatDatum.format(abreise)} Uhr</td></tr>
-      ${flugnummer ? `<tr><td style="padding:4px 0;color:#666;">Flugnummer (Rückflug)</td><td style="padding:4px 0;">${flugnummer}</td></tr>` : ""}
-      <tr><td style="padding:4px 0;color:#666;">Gesamtpreis</td><td style="padding:4px 0;font-weight:bold;">${centToEUR(preisGesamtCent)}</td></tr>
+    <h2 style="font-size:19px; margin:0 0 6px; color:#14171e;">Buchung bestätigt</h2>
+    <p style="margin:0 0 18px; color:#555;">Vielen Dank für Ihre Buchung bei FlySpot Valet.</p>
+
+    <div style="border:1px solid #ece6d8; background:#faf6ec; border-radius:10px; padding:14px 18px; margin-bottom:18px;">
+      <div style="font-size:11px; letter-spacing:1px; text-transform:uppercase; color:#9c7c38;">Buchungsnummer</div>
+      <div style="font-size:22px; font-weight:700; color:#14171e; letter-spacing:0.5px;">${bookingNumber}</div>
+    </div>
+
+    <table style="width: 100%; border-collapse: collapse; margin: 0 0 18px;">
+      ${zeile("Produkt", produktName)}
+      ${zeile("Anreise", `${formatDatum.format(anreise)} Uhr`)}
+      ${zeile("Abreise", `${formatDatum.format(abreise)} Uhr`)}
+      ${flugnummer ? zeile("Flugnummer (Rückflug)", flugnummer) : ""}
+      ${zeile("Gesamtpreis", centToEUR(preisGesamtCent), true)}
     </table>
-    <p><strong>So funktioniert's:</strong></p>
-    <p>Bitte fahren Sie zur vereinbarten Zeit direkt zum Valet-/Shuttle-Terminal am Flughafen Frankfurt.
-    Unser Team empfängt Sie dort mit Ihrer Buchungsnummer. Eine kostenlose Stornierung ist bis 48 Stunden
-    vor Anreise möglich (danach 50 % Erstattung).</p>
+
+    <p style="margin:0 0 6px; font-weight:bold; color:#14171e;">So funktioniert's</p>
+    <p style="margin:0; color:#555;">Bitte fahren Sie zur vereinbarten Zeit direkt zum Valet-/Shuttle-Terminal am Flughafen
+    Frankfurt und nennen Sie Ihre Buchungsnummer. Unser Team empfängt Sie dort. Eine kostenlose
+    Stornierung ist bis 48 Stunden vor Anreise möglich (danach 50 % Erstattung).</p>
   `);
   await sende(an, `Buchungsbestätigung ${bookingNumber} – FlySpot Valet`, html);
 }
