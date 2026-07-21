@@ -1,5 +1,6 @@
 import { PDFDocument, StandardFonts, rgb, type PDFImage } from "pdf-lib";
 import { phaseLabel } from "@/lib/handover";
+import { zeichneMarkenkopf, zeichneMarkenfuss, PDF_GOLD, PDF_INK, PDF_MUTED, PDF_LINE } from "@/lib/pdf-brand";
 
 export interface ProtokollPdfDaten {
   bookingNumber: string;
@@ -61,17 +62,28 @@ export async function erzeugeProtokollPdf(d: ProtokollPdfDaten): Promise<Uint8Ar
   const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
   const A4: [number, number] = [595.28, 841.89];
   const links = 50;
-  const gold = rgb(0.61, 0.51, 0.22);
-  const dunkel = rgb(0.1, 0.1, 0.1);
 
   let seite = doc.addPage(A4);
   let { width, height } = seite.getSize();
-  let y = height - 55;
-
   const rechts = width - 50;
 
+  let y = zeichneMarkenkopf(seite, { font, fontBold }, {
+    links,
+    rechts,
+    titel: "Übergabeprotokoll",
+    subtitel: phaseLabel(d.phase),
+  });
+  seite.drawText(`Buchung ${d.bookingNumber} · erstellt ${fmtDatumZeit.format(d.erstelltAm)} Uhr`, {
+    x: links,
+    y,
+    size: 9,
+    font,
+    color: PDF_MUTED,
+  });
+  y -= 24;
+
   function neueSeiteWennNoetig(brauche: number) {
-    if (y - brauche < 60) {
+    if (y - brauche < 90) {
       seite = doc.addPage(A4);
       ({ width, height } = seite.getSize());
       y = height - 55;
@@ -84,35 +96,22 @@ export async function erzeugeProtokollPdf(d: ProtokollPdfDaten): Promise<Uint8Ar
       y,
       size: o.size ?? 11,
       font: o.bold ? fontBold : font,
-      color: o.color ?? dunkel,
+      color: o.color ?? PDF_INK,
     });
   }
 
-  // Kopf
-  text("FlySpot Valet", { bold: true, size: 18, color: gold });
-  y -= 15;
-  text("Flughafen Frankfurt · www.flyspot-valet.de", { size: 9, color: rgb(0.4, 0.4, 0.4) });
-  y -= 34;
-  text(`Übergabeprotokoll – ${phaseLabel(d.phase)}`, { bold: true, size: 14 });
-  y -= 16;
-  text(`Buchung ${d.bookingNumber} · erstellt ${fmtDatumZeit.format(d.erstelltAm)} Uhr`, {
-    size: 9,
-    color: rgb(0.4, 0.4, 0.4),
-  });
-  y -= 28;
-
   function abschnitt(titel: string) {
     neueSeiteWennNoetig(40);
-    text(titel, { bold: true, size: 12, color: gold });
+    text(titel, { bold: true, size: 12, color: PDF_GOLD });
     y -= 6;
-    seite.drawLine({ start: { x: links, y }, end: { x: rechts, y }, thickness: 0.5, color: rgb(0.8, 0.8, 0.8) });
+    seite.drawRectangle({ x: links, y, width: rechts - links, height: 0.8, color: PDF_LINE });
     y -= 18;
   }
 
   function feld(label: string, wert: string) {
     neueSeiteWennNoetig(18);
-    text(label, { x: links, size: 10, color: rgb(0.45, 0.45, 0.45) });
-    seite.drawText(wert || "–", { x: links + 150, y, size: 10, font });
+    text(label, { x: links, size: 10, color: PDF_MUTED });
+    seite.drawText(wert || "–", { x: links + 150, y, size: 10, font, color: PDF_INK });
     y -= 17;
   }
 
@@ -199,6 +198,15 @@ export async function erzeugeProtokollPdf(d: ProtokollPdfDaten): Promise<Uint8Ar
       y -= bHoehe + 16;
     }
   }
+
+  zeichneMarkenfuss(seite, font, {
+    links,
+    rechts,
+    zeilen: [
+      "FlySpot Valet · Flughafen Frankfurt · www.flyspot-valet.de",
+      "Dieses Protokoll dokumentiert den Fahrzeugzustand zum genannten Zeitpunkt.",
+    ],
+  });
 
   return doc.save();
 }
