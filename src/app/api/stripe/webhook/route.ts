@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { belegteTage } from "@/lib/date";
 import { gibKapazitaetFrei } from "@/lib/capacity";
 import { sendeBuchungsbestaetigung } from "@/lib/email";
+import { baueRechnungsPdfFuerBuchung } from "@/lib/invoice";
 
 export async function POST(request: Request) {
   const signature = request.headers.get("stripe-signature");
@@ -69,6 +70,15 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     }
   });
 
+  // Rechnung als PDF anhängen (Best-Effort – ein PDF-Fehler darf die
+  // Bestätigungs-E-Mail nicht verhindern).
+  let rechnungPdf: Buffer | null = null;
+  try {
+    rechnungPdf = await baueRechnungsPdfFuerBuchung(payment.bookingId);
+  } catch (e) {
+    console.error("Rechnung-PDF für Bestätigungsmail fehlgeschlagen:", e);
+  }
+
   await sendeBuchungsbestaetigung({
     an: payment.booking.customer.email,
     bookingNumber: payment.booking.bookingNumber,
@@ -77,6 +87,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     abreise: payment.booking.abreise,
     preisGesamtCent: payment.booking.preisGesamtCent,
     flugnummer: payment.booking.rueckflugnummer,
+    rechnungPdf,
   });
 }
 
