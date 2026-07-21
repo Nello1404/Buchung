@@ -104,6 +104,14 @@ export default async function Home() {
           <h2 className="mt-4 font-serif text-3xl font-semibold text-ink sm:text-4xl">
             So einfach parken Sie bei uns
           </h2>
+          <p className="mt-6">
+            <Link href="/ablauf" className="btn-outline">
+              Ablauf als Film erleben
+              <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M4 10h12M11 5l5 5-5 5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </Link>
+          </p>
         </div>
         <div className="mt-14 grid gap-8 md:grid-cols-3">
           {[
