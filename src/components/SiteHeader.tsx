@@ -12,7 +12,7 @@ import { useEffect, useState } from "react";
 const LOGO_VARIANTE: "bild" | "wortmarke" = "wortmarke";
 
 const navLinks = [
-  { href: "/#ablauf", hash: "ablauf", label: "So funktioniert's" },
+  { href: "/ablauf", hash: "", label: "So funktioniert's" },
   { href: "/#preise", hash: "preise", label: "Preise" },
   { href: "/#einblicke", hash: "einblicke", label: "Einblicke" },
   { href: "/service", hash: "", label: "Service" },
